@@ -1,0 +1,87 @@
+# DVC Pipeline Definition
+
+stages:
+  ingest_tmdb:
+    cmd: python src/data/ingest_tmdb.py
+    deps:
+      - src/data/ingest_tmdb.py
+    params:
+      - data.tmdb_max_results
+      - data.languages
+    outs:
+      - data/raw/tmdb_movies.parquet
+
+  ingest_omdb:
+    cmd: python src/data/ingest_omdb.py
+    deps:
+      - src/data/ingest_omdb.py
+      - data/raw/tmdb_movies.parquet
+    params:
+      - data.omdb_batch_size
+    outs:
+      - data/raw/omdb_details.parquet
+
+  clean:
+    cmd: python src/data/clean.py
+    deps:
+      - src/data/clean.py
+      - data/raw/tmdb_movies.parquet
+      - data/raw/omdb_details.parquet
+    outs:
+      - data/interim/cleaned_data.parquet
+
+  validate:
+    cmd: python src/data/validate.py
+    deps:
+      - src/data/validate.py
+      - data/interim/cleaned_data.parquet
+    outs:
+      - data/interim/validated_data.parquet
+
+  features:
+    cmd: python src/features/text_vectorizer.py
+    deps:
+      - src/features/text_vectorizer.py
+      - data/interim/validated_data.parquet
+    params:
+      - features
+    outs:
+      - data/processed/train.parquet
+      - data/processed/val.parquet
+      - data/processed/test.parquet
+      - models/artifacts/tfidf.pkl
+
+  train:
+    cmd: python src/models/train.py
+    deps:
+      - src/models/train.py
+      - data/processed/train.parquet
+      - data/processed/val.parquet
+      - models/artifacts/tfidf.pkl
+    params:
+      - model
+      - triggers
+    outs:
+      - models/artifacts/classifier.pkl
+      - models/artifacts/label_binarizer.pkl
+
+  evaluate:
+    cmd: python src/models/evaluate.py
+    deps:
+      - src/models/evaluate.py
+      - data/processed/test.parquet
+      - models/artifacts/classifier.pkl
+      - models/artifacts/label_binarizer.pkl
+    metrics:
+      - metrics/scores.json:
+          cache: false
+
+  export_onnx:
+    cmd: python src/models/export_onnx.py
+    deps:
+      - src/models/export_onnx.py
+      - models/artifacts/classifier.pkl
+      - models/artifacts/tfidf.pkl
+    outs:
+      - models/onnx/classifier.onnx
+      - models/onnx/metadata.json

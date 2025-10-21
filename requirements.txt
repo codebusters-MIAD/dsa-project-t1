@@ -1,0 +1,41 @@
+# Core dependencies
+python>=3.9
+
+# Data processing
+pandas
+numpy
+pyarrow
+
+# ML/NLP
+scikit-learn
+nltk
+spacy
+
+# MLOps
+mlflow
+dvc
+onnx
+onnxruntime
+
+# API
+fastapi
+uvicorn
+pydantic
+
+# Dashboard
+streamlit
+
+# External APIs
+requests
+python-dotenv
+
+# Testing
+pytest
+pytest-cov
+
+# Data validation
+great-expectations
+
+# Cloud/Storage
+boto3
+s3fs
