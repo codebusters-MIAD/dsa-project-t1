@@ -1,0 +1,30 @@
+name: dsa-project-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python base
+  - python=3.11
+  
+  # Core data processing - versiones básicas primero
+  - pandas
+  - numpy
+  - requests
+  - huggingface_hub
+  
+  # Development tools
+  - pip
+  - jupyter
+  - notebook
+  
+  # Install DVC and other packages via pip
+  - pip:
+    - dvc[s3]
+    - scikit-learn
+    - nltk
+    - mlflow
+    - fastapi
+    - uvicorn
+    - streamlit
+    - pytest
+    - boto3
