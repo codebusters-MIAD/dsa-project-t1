@@ -1,0 +1,6 @@
+outs:
+- md5: 22076e3c3683b72199bd5a3325ed8ad0.dir
+  size: 130452879
+  nfiles: 16
+  hash: md5
+  path: movies_imdb_sample
