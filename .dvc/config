@@ -1,4 +1,7 @@
 [core]
     remote = storage
+    checksum_jobs = 4
 ['remote "storage"']
     url = s3://dvc-filmlens-data-repo
+    read_timeout = 600
+    connect_timeout = 120
