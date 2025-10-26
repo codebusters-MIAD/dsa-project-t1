@@ -76,7 +76,7 @@ def download_movielens_with_retries(url: str, zip_path: pathlib.Path, max_retrie
             
             urllib.request.urlretrieve(url, zip_path, progress_hook)
             if verbose:
-                print(f"\n✅ Download completed successfully")
+                print(f"\n Download completed successfully")
             return
             
         except Exception as e:
@@ -124,7 +124,7 @@ def download_movielens(mkdir: bool = True, verbose: bool = False) -> None:
     #     zip_path.unlink()
         
     #     if verbose:
-    #         print(f"✅ MovieLens extracted to {output_dir}")
+    #         print(f"MovieLens extracted to {output_dir}")
             
     # except Exception as e:
     #     if zip_path.exists():
