@@ -35,7 +35,7 @@ Important notes
   augmented with synopses using APIs like TMDb or OMDb when API keys are
   available. Placeholder code is included for guidance.
 """
-x
+
 from __future__ import annotations
 
 import os
@@ -81,7 +81,7 @@ def download_movielens_with_retries(url: str, zip_path: pathlib.Path, max_retrie
             
         except Exception as e:
             if verbose:
-                print(f"\n❌ Intento {attempt + 1} falló: {e}")
+                print(f"\n Intento {attempt + 1} falló: {e}")
             if zip_path.exists():
                 zip_path.unlink()
             if attempt == max_retries - 1:
@@ -180,7 +180,7 @@ def download_ddd_warnings() -> Dict[str, Dict[int, Dict[str, int]]]:
             # Copy into our data directory for convenience
             dest_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ddd_path, dest_path)
-            print(f"✅ DDD dictionary descargado exitosamente a: {dest_path}")
+            print(f" DDD dictionary descargado exitosamente a: {dest_path}")
         except Exception as e:
             raise RuntimeError(f"Failed to download DDD dictionary: {e}")
     else:
