@@ -44,7 +44,7 @@ evaluate.py contiene código para evaluar los resultados de un modelo de aprendi
 
 
 Se investigo una posible estructura del proyecto https://es.python-3.com/?p=283 y se complemento navegando por internet
-
+```bash
 data-version-control/
 |
 ├── data/
@@ -57,3 +57,4 @@ data-version-control/
     ├── evaluate.py
     ├── prepare.py
     └── train.py
+```
