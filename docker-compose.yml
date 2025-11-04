@@ -1,0 +1,131 @@
+# FilmLens- Docker Compose
+# Services orchestration (MLflow, PostgreSQL, API)
+
+version: '3.8'
+
+services: 
+  # MLflow Server - Tracking de Experimentos (Stateless) 
+  mlflow:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.mlflow
+    container_name: filmlens-mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://mlflow_user:mlflow_dev_2025@database:5432/mlflow
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://filmlens-mlflow-artifacts
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=us-east-1
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://mlflow_user:mlflow_dev_2025@database:5432/mlflow
+      --default-artifact-root s3://filmlens-mlflow-artifacts
+      --serve-artifacts
+      --artifacts-destination s3://filmlens-mlflow-artifacts
+      --host 0.0.0.0
+      --port 5000
+    depends_on:
+      database:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+    networks:
+      - filmlens-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  
+  # PostgreSQL - Base de datos de Triggers detectados  
+  database:
+    image: postgres:15-alpine
+    container_name: filmlens-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-filmlens_dev_2025}
+      POSTGRES_DB: ${POSTGRES_DB:-filmlens}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres:/docker-entrypoint-initdb.d
+    ports:
+      - "5435:5432"
+    networks:
+      - filmlens-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d filmlens"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  
+  # Flyway - Database Migrations  
+  flyway:
+    image: flyway/flyway:10-alpine
+    platform: linux/amd64
+    container_name: filmlens-flyway
+    command: -configFiles=/flyway/conf/flyway.conf migrate
+    volumes:
+      - ./docker/migrations:/flyway/sql
+      - ./docker/flyway.conf:/flyway/conf/flyway.conf
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://database:5432/${POSTGRES_DB:-filmlens}
+      - FLYWAY_USER=filmlens_user
+      - FLYWAY_PASSWORD=${POSTGRES_PASSWORD:-filmlens_dev_2025}
+      - FLYWAY_LOCATIONS=filesystem:/flyway/sql
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - filmlens-network
+
+  
+  # API - FastAPI  
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: filmlens-api
+    volumes:
+      # Hot reload en desarrollo
+      - ./src:/app/src
+      - ./models/production:/app/models/production
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://filmlens_user:${POSTGRES_PASSWORD:-filmlens_dev_2025}@database:5432/${POSTGRES_DB:-filmlens}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MODEL_PATH=/app/models/production
+      - DEBUG=true
+    depends_on:
+      database:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    networks:
+      - filmlens-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+
+# Networks
+networks:
+  filmlens-network:
+    driver: bridge
+    name: filmlens-network
+
+
+# Volumes
+volumes:
+  postgres-data:
+    name: filmlens-postgres-data

@@ -205,3 +205,26 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# Course material
+course-material/
+notebooks/*.md
+
+# FilmLens specific
+src/filmlens/trained_models/*.pkl
+src/filmlens/trained_models/*.joblib
+!src/filmlens/trained_models/.gitkeep
+mlruns/
+mlflow-artifacts/
+models/production/*.pkl
+models/production/*.joblib
+!models/production/.gitkeep
+
+
+# Pycharm
+.idea/
+
+
+# Doc
+docs/
