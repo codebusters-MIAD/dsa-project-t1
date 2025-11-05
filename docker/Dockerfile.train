@@ -1,0 +1,38 @@
+# FilmLens Training Environment
+# Imagen optimizada para entrenamiento de modelos
+FROM python:3.11.14-slim-bookworm
+
+LABEL maintainer="williampinilla@uniandes.edu.co"
+LABEL description="FilmLens Trigger Map - Training Environment"
+LABEL stage="training"
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Copiar solo lo necesario para entrenamiento
+COPY requirements/requirements.txt /tmp/requirements.txt
+
+# Instalar dependencias
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Copiar código fuente (solo filmlens package)
+COPY src/filmlens/ /app/src/filmlens/
+COPY src/__init__.py /app/src/__init__.py
+
+# Variables de entorno
+ENV PYTHONPATH=/app
+ENV MLFLOW_TRACKING_URI=http://mlflow:5000
+ENV DVC_NO_ANALYTICS=1
+
+# Crear directorios para datos y modelos
+RUN mkdir -p /app/data /app/models /app/mlruns /app/src/filmlens/trained_models
+
+# Script de entrada por defecto - usar módulo filmlens
+CMD ["python", "-m", "filmlens.train_pipeline"]

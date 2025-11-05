@@ -1,0 +1,105 @@
+# Docker ignore - FilmLens Project
+# Similar a .gitignore pero para Docker build context
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+
+# Data (se monta como volumen, no se copia)
+data/raw/*
+data/interim/*
+data/processed/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+
+# Models (se monta como volumen o se copia específicamente)
+models/experiments/*
+mlruns/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Tests (no necesarios en producción)
+tests/
+pytest.ini
+.pytest_cache/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Environment variables (sensibles)
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore

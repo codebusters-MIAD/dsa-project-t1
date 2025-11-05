@@ -1,0 +1,72 @@
+# FilmLens API Production Environment
+# Multi-stage build para imagen ligera
+FROM python:3.11.14-slim-bookworm AS builder
+
+LABEL stage="builder"
+
+# Directorio de trabajo
+WORKDIR /build
+
+# Copiar requirements
+COPY requirements/requirements.txt /tmp/requirements.txt
+
+# Instalar dependencias para API (core + FastAPI)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --user \
+    pandas \
+    numpy \
+    scikit-learn \
+    scipy \
+    pydantic \
+    pyyaml \
+    mlflow \
+    psycopg2-binary \
+    fastapi \
+    uvicorn[standard] \
+    python-dotenv
+
+
+# Stage 2: Runtime (imagen final pequeña)
+FROM python:3.11.14-slim-bookworm
+
+LABEL maintainer="williampinilla@uniandes.edu.co"
+LABEL description="FilmLens Trigger Map - Production API"
+LABEL version="1.0"
+
+# Copiar dependencias instaladas desde builder
+COPY --from=builder /root/.local /root/.local
+
+# Actualizar PATH
+ENV PATH=/root/.local/bin:$PATH
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Copiar solo código necesario para API
+COPY src/api/ /app/src/api/
+COPY src/filmlens/ /app/src/filmlens/
+COPY src/__init__.py /app/src/__init__.py
+
+# Copiar modelos de producción
+COPY models/production/ /app/models/production/
+
+# Variables de entorno
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV MODEL_PATH=/app/models/production
+
+# Crear usuario no-root
+RUN useradd -m -u 1000 apiuser && \
+    chown -R apiuser:apiuser /app
+
+USER apiuser
+
+# Exponer puerto de API
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+# Comando de ejecución con uvicorn
+CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

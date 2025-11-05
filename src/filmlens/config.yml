@@ -1,0 +1,75 @@
+# FilmLens Multi-Label Classifier Configuration
+
+app_config:
+  package_name: filmlens
+  pipeline_save_file: multilabel_classifier_v
+  mlflow_tracking_uri: http://localhost:5000
+  mlflow_experiment_name: multilabel_triggers
+  mlflow_artifact_location: null  # null = usa el default del servidor MLflow
+
+data_config:
+  train_data_file: processed/movies_imdb_sample/train_set.csv
+  text_column: description
+  drop_na_columns:
+    - description
+  test_size: 0.2
+  random_state: 42
+  stratify_by: genre
+  
+  # Multi-label targets
+  target_columns:
+    - has_violence
+    - has_sexual_content
+    - has_substance_abuse
+    - has_suicide
+    - has_child_abuse
+    - has_discrimination
+    - has_strong_language
+    - has_horror
+    - has_animal_cruelty
+
+feature_config:
+  # TF-IDF parameters
+  tfidf:
+    max_features: 100
+    ngram_range: [1, 2]
+    min_df: 5
+    max_df: 0.8
+    stop_words: english
+  
+  # Keyword detection
+  use_keyword_features: true
+  keyword_categories:
+    - violence
+    - sexual_content
+    - substance_abuse
+    - suicide
+    - child_abuse
+    - discrimination
+    - strong_language
+    - horror
+    - animal_cruelty
+  
+  # Genre encoding
+  use_genre_features: true
+
+model:
+  # MultiOutputClassifier with RandomForest
+  algorithm: multi_output_random_forest
+  
+  random_forest:
+    n_estimators: 150
+    max_depth: 25
+    min_samples_split: 5
+    min_samples_leaf: 2
+    class_weight: balanced
+    random_state: 42
+    n_jobs: -1
+
+metrics:
+  # Multi-label specific metrics
+  primary_metric: f1_macro
+  additional_metrics:
+    - hamming_loss
+    - subset_accuracy
+    - f1_micro
