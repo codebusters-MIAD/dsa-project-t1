@@ -1,6 +1,4 @@
 import logging
-from pathlib import Path
-from typing import Optional
 import sys
 
 # Add /app/src to sys.path to allow joblib to find 'filmlens' during unpickling

@@ -160,7 +160,7 @@ class GenreEncoder(BaseEstimator, TransformerMixin):
 
 
 class FeatureCombiner(BaseEstimator, TransformerMixin):
-    """Combine TF-IDF, keyword, and genre features."""
+    """Combine TF-IDF and genre features."""
     
     def __init__(self, text_column: str = None):
         if text_column is None:
@@ -169,7 +169,6 @@ class FeatureCombiner(BaseEstimator, TransformerMixin):
         self.text_column = text_column
         self.tfidf = None
         self.genre_columns = None
-        self.keyword_columns = None
         
         # Initialize TF-IDF from config
         tfidf_cfg = config.feature_config.tfidf
@@ -189,10 +188,6 @@ class FeatureCombiner(BaseEstimator, TransformerMixin):
         if config.feature_config.use_genre_features:
             self.genre_columns = [col for col in X.columns if col.startswith('genre_')]
         
-        # Store keyword columns
-        if config.feature_config.use_keyword_features:
-            self.keyword_columns = [col for col in X.columns if col.startswith('keyword_')]
-        
         return self
     
     def transform(self, X):
@@ -205,11 +200,6 @@ class FeatureCombiner(BaseEstimator, TransformerMixin):
         if self.genre_columns:
             X_genre = csr_matrix(X[self.genre_columns].values)
             features_list.append(X_genre)
-        
-        # Add keyword features
-        if self.keyword_columns:
-            X_keywords = csr_matrix(X[self.keyword_columns].values)
-            features_list.append(X_keywords)
         
         # Combine all features
         X_combined = hstack(features_list)

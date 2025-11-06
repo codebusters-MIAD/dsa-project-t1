@@ -50,7 +50,6 @@ class TFIDFConfig(BaseModel):
 class FeatureConfig(BaseModel):
     """Feature engineering configuration."""
     tfidf: TFIDFConfig
-    use_keyword_features: bool
     keyword_categories: List[str]
     use_genre_features: bool
 

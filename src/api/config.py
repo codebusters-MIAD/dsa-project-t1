@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from pydantic_settings import BaseSettings
 
@@ -24,7 +23,11 @@ class Settings(BaseSettings):
     def full_model_path(self) -> Path:
         # In Docker, model is in /app/src/filmlens/trained_models
         # Locally, model is in src/filmlens/trained_models
-        model_path = Path("/app/src/filmlens/trained_models") if Path("/app").exists() else self.project_root / "src/filmlens/trained_models"
+        if Path("/app").exists():
+            model_path = Path("/app/src/filmlens/trained_models")
+        else:
+            model_path = self.project_root / "src/filmlens/trained_models"
+        
         return model_path / self.model_file
     
     # CORS

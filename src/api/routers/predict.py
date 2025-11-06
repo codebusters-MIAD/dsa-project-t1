@@ -52,14 +52,24 @@ async def predict_triggers(request: PredictionRequest):
         # predictions_array shape: (1, 9) for multi-label
         # Each element is binary (0 or 1)
         predictions = []
+        
+        # Get probabilities for all outputs
+        # predict_proba returns a list of arrays (one per output), not a 2D array
+        try:
+            proba_list = model_manager.predict_proba(input_data)
+        except (AttributeError, ValueError, IndexError) as e:
+            logger.warning(f"Could not get probabilities: {e}")
+            proba_list = None
+        
         for i, trigger_label in enumerate(TRIGGER_LABELS):
             detected = bool(predictions_array[0][i])
             
-            # For probability, use predict_proba if available
-            try:
-                proba = model_manager.predict_proba(input_data)[0][i]
-                prob = float(proba)
-            except:
+            # Extract probability for the positive class (index 1)
+            if proba_list is not None:
+                # proba_list[i] shape: (n_samples, 2)
+                # [0, 1] gets first sample, positive class probability
+                prob = float(proba_list[i][0, 1])
+            else:
                 # Fallback to binary value if proba not available
                 prob = 1.0 if detected else 0.0
             
