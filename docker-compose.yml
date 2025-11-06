@@ -1,4 +1,4 @@
-# FilmLens- Docker Compose
+# FilmLens - Docker Compose
 # Services orchestration (MLflow, PostgreSQL, API)
 
 services: 
