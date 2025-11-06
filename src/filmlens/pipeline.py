@@ -1,5 +1,3 @@
-"""Pipeline construction for multi-label classification."""
-
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multioutput import MultiOutputClassifier
@@ -28,27 +26,20 @@ def create_pipeline() -> Pipeline:
         features.TextCleaner()
     ))
     
-    # Step 2: Keyword detection
-    if config.feature_config.use_keyword_features:
-        pipeline_steps.append((
-            'keyword_detector',
-            features.KeywordDetector()
-        ))
-    
-    # Step 3: Genre encoding
+    # Step 2: Genre encoding
     if config.feature_config.use_genre_features:
         pipeline_steps.append((
             'genre_encoder',
             features.GenreEncoder()
         ))
     
-    # Step 4: Feature combination
+    # Step 3: Feature combination
     pipeline_steps.append((
         'feature_combiner',
         features.FeatureCombiner()
     ))
     
-    # Step 5: Multi-output classifier
+    # Step 4: Multi-output classifier
     rf_cfg = config.model.random_forest
     base_classifier = RandomForestClassifier(
         n_estimators=rf_cfg.n_estimators,

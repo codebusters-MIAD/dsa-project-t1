@@ -1,5 +1,3 @@
-"""Feature engineering transformers for sklearn pipeline."""
-
 import pandas as pd
 import numpy as np
 import re
@@ -43,18 +41,20 @@ class TextCleaner(BaseEstimator, TransformerMixin):
 
 
 class KeywordDetector(BaseEstimator, TransformerMixin):
-    """Extract binary keyword features for triggers."""
+    """
+    Extract binary keyword features for triggers.
+    """
     
     KEYWORDS = {
         'violence': ['violence', 'violent', 'kill', 'murder', 'death', 'blood', 
                      'fight', 'war', 'weapon', 'gun', 'shooting', 'stabbing'],
-        'sexual_content': ['sex', 'sexual', 'rape', 'assault', 'abuse', 'seduce', 
-                          'affair', 'prostitut', 'molest', 'harassment'],
+        'sexual_content': ['sex', 'sexual', 'rape', 'assault', 'seduce', 
+                          'affair', 'prostitut', 'harassment'],
         'substance_abuse': ['drug', 'cocaine', 'heroin', 'addiction', 'alcohol', 
                            'drunk', 'overdose', 'addict', 'substance'],
         'suicide': ['suicide', 'suicidal', 'kill himself', 'kill herself', 
                    'depression', 'self-harm'],
-        'child_abuse': ['child abuse', 'pedophil', 'molest', 'underage'],
+        'child_abuse': ['child abuse', 'pedophil', 'underage'],
         'discrimination': ['racism', 'racist', 'discrimination', 'prejudice', 
                           'hate crime', 'sexism', 'homophobia'],
         'strong_language': ['profanity', 'vulgar', 'explicit language', 'offensive'],
@@ -63,7 +63,15 @@ class KeywordDetector(BaseEstimator, TransformerMixin):
         'animal_cruelty': ['animal cruelty', 'animal abuse', 'torture animal']
     }
     
-    def __init__(self, text_column: str = None, categories: List[str] = None):
+    def __init__(self, text_column: str = None, categories: List[str] = None, 
+                 use_as_features: bool = False):
+        """
+        Args:
+            text_column: Column to search for keywords
+            categories: List of trigger categories to detect
+            use_as_features: If True, creates keyword_* columns as features.
+                            If False (default), doesn't create any columns.
+        """
         if text_column is None:
             text_column = config.data_config.text_column
         if categories is None:
@@ -71,12 +79,17 @@ class KeywordDetector(BaseEstimator, TransformerMixin):
         
         self.text_column = text_column
         self.categories = categories
+        self.use_as_features = use_as_features
     
     def fit(self, X, y=None):
         return self
     
     def transform(self, X):
         X = X.copy()
+        
+        # Only create keyword features if explicitly requested
+        if not self.use_as_features:
+            return X
         
         for category in self.categories:
             if category not in self.KEYWORDS:
@@ -85,11 +98,33 @@ class KeywordDetector(BaseEstimator, TransformerMixin):
             keywords = self.KEYWORDS[category]
             pattern = '|'.join(keywords)
             
-            X[f'has_{category}'] = X[self.text_column].str.contains(
+            # Use keyword_ prefix to distinguish from target labels
+            X[f'keyword_{category}'] = X[self.text_column].str.contains(
                 pattern, case=False, na=False, regex=True
             ).astype(int)
         
         return X
+
+
+def create_keyword_labels(df: pd.DataFrame, text_column: str = None) -> pd.DataFrame:
+    """
+    Create target labels based on keywords (for baseline only).
+    
+    This is used to create initial labels when no ground truth exists.
+    Returns DataFrame with has_* columns.
+    """
+    if text_column is None:
+        text_column = config.data_config.text_column
+    
+    labels_df = df.copy()
+    
+    for category, keywords in KeywordDetector.KEYWORDS.items():
+        pattern = '|'.join(keywords)
+        labels_df[f'has_{category}'] = labels_df[text_column].str.contains(
+            pattern, case=False, na=False, regex=True
+        ).astype(int)
+    
+    return labels_df
 
 
 class GenreEncoder(BaseEstimator, TransformerMixin):
@@ -125,7 +160,7 @@ class GenreEncoder(BaseEstimator, TransformerMixin):
 
 
 class FeatureCombiner(BaseEstimator, TransformerMixin):
-    """Combine TF-IDF, keyword, and genre features."""
+    """Combine TF-IDF and genre features."""
     
     def __init__(self, text_column: str = None):
         if text_column is None:
@@ -134,7 +169,6 @@ class FeatureCombiner(BaseEstimator, TransformerMixin):
         self.text_column = text_column
         self.tfidf = None
         self.genre_columns = None
-        self.keyword_columns = None
         
         # Initialize TF-IDF from config
         tfidf_cfg = config.feature_config.tfidf
@@ -154,10 +188,6 @@ class FeatureCombiner(BaseEstimator, TransformerMixin):
         if config.feature_config.use_genre_features:
             self.genre_columns = [col for col in X.columns if col.startswith('genre_')]
         
-        # Store keyword columns
-        if config.feature_config.use_keyword_features:
-            self.keyword_columns = [col for col in X.columns if col.startswith('has_')]
-        
         return self
     
     def transform(self, X):
@@ -170,11 +200,6 @@ class FeatureCombiner(BaseEstimator, TransformerMixin):
         if self.genre_columns:
             X_genre = csr_matrix(X[self.genre_columns].values)
             features_list.append(X_genre)
-        
-        # Add keyword features
-        if self.keyword_columns:
-            X_keywords = csr_matrix(X[self.keyword_columns].values)
-            features_list.append(X_keywords)
         
         # Combine all features
         X_combined = hstack(features_list)

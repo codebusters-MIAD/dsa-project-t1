@@ -1,7 +1,5 @@
-# FilmLens- Docker Compose
+# FilmLens - Docker Compose
 # Services orchestration (MLflow, PostgreSQL, API)
-
-version: '3.8'
 
 services: 
   # MLflow Server - Tracking de Experimentos (Stateless) 
@@ -92,21 +90,22 @@ services:
       dockerfile: docker/Dockerfile.api
     container_name: filmlens-api
     volumes:
-      # Hot reload en desarrollo
       - ./src:/app/src
-      - ./models/production:/app/models/production
+      # Mount trained models from local
+      - ./src/filmlens/trained_models:/app/src/filmlens/trained_models
     ports:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://filmlens_user:${POSTGRES_PASSWORD:-filmlens_dev_2025}@database:5432/${POSTGRES_DB:-filmlens}
       - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - MODEL_PATH=/app/models/production
+      - PYTHONPATH=/app:/app/src
       - DEBUG=true
+      - LOG_LEVEL=INFO
     depends_on:
       database:
         condition: service_healthy
       mlflow:
-        condition: service_healthy
+        condition: service_started
     networks:
       - filmlens-network
     restart: unless-stopped
@@ -115,7 +114,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    command: ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 
 # Networks
