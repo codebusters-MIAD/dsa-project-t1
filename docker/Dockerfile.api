@@ -18,12 +18,14 @@ RUN pip install --no-cache-dir --upgrade pip && \
     scikit-learn \
     scipy \
     pydantic \
+    pydantic-settings \
     pyyaml \
     mlflow \
     psycopg2-binary \
     fastapi \
     uvicorn[standard] \
-    python-dotenv
+    python-dotenv \
+    joblib
 
 
 # Stage 2: Runtime (imagen final pequeña)
@@ -45,21 +47,14 @@ WORKDIR /app
 # Copiar solo código necesario para API
 COPY src/api/ /app/src/api/
 COPY src/filmlens/ /app/src/filmlens/
-COPY src/__init__.py /app/src/__init__.py
 
-# Copiar modelos de producción
-COPY models/production/ /app/models/production/
+# Crear directorio para modelos (se monta como volumen)
+RUN mkdir -p /app/src/filmlens/trained_models
 
 # Variables de entorno
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV MODEL_PATH=/app/models/production
-
-# Crear usuario no-root
-RUN useradd -m -u 1000 apiuser && \
-    chown -R apiuser:apiuser /app
-
-USER apiuser
 
 # Exponer puerto de API
 EXPOSE 8000
@@ -69,4 +64,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Comando de ejecución con uvicorn
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

@@ -1,5 +1,3 @@
-"""Training pipeline for multi-label classifier."""
-
 import logging
 from pathlib import Path
 import mlflow
@@ -62,12 +60,12 @@ def run_training() -> None:
         logger.info("\n[2/6] Preparing multi-label targets...")
         target_cols = config.data_config.target_columns
         
-        # Create targets from keyword detection if not present
-        from filmlens.processing.features import KeywordDetector
-        keyword_detector = KeywordDetector()
-        df = keyword_detector.fit_transform(df)
+        # Create targets from keywords
+        from filmlens.processing.features import create_keyword_labels
+        df_with_labels = create_keyword_labels(df)
         
-        y_multilabel = df[target_cols].values
+        y_multilabel = df_with_labels[target_cols].values
+
         X = df
         
         logger.info(f"Target shape: {y_multilabel.shape}")

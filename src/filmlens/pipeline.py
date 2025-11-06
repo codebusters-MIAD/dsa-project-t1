@@ -1,5 +1,3 @@
-"""Pipeline construction for multi-label classification."""
-
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multioutput import MultiOutputClassifier
@@ -32,7 +30,7 @@ def create_pipeline() -> Pipeline:
     if config.feature_config.use_keyword_features:
         pipeline_steps.append((
             'keyword_detector',
-            features.KeywordDetector()
+            features.KeywordDetector(use_as_features=False)
         ))
     
     # Step 3: Genre encoding

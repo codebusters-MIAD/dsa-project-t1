@@ -47,6 +47,26 @@ logs-mlflow: ## Ver logs de MLflow
 logs-api: ## Ver logs de API
 	docker-compose logs -f api
 
+# API commands
+.PHONY: api-run
+api-run: ## Ejecutar API localmente
+	@chmod +x scripts/run_api.sh
+	@./scripts/run_api.sh
+
+.PHONY: api-dev
+api-dev: ## Ejecutar API en modo desarrollo
+	@export PYTHONPATH=src && uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+
+.PHONY: api-test
+api-test: ## Test health endpoint
+	@curl http://localhost:8000/health
+
+.PHONY: api-predict-test
+api-predict-test: ## Test prediction endpoint
+	@curl -X POST http://localhost:8000/api/v1/predict \
+		-H "Content-Type: application/json" \
+		-d '{"title":"The Dark Knight","description":"Batman fights the Joker in Gotham City","genre":"Action"}'
+
 # Shells
 .PHONY: api-shell
 api-shell: ## Shell en contenedor API

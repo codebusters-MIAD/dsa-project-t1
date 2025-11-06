@@ -29,16 +29,17 @@ data_config:
     - has_animal_cruelty
 
 feature_config:
-  # TF-IDF parameters
+  # TF-IDF parameters (increased since we're not using keywords as features)
   tfidf:
-    max_features: 100
-    ngram_range: [1, 2]
-    min_df: 5
+    max_features: 500  # Increased from 100
+    ngram_range: [1, 3]  # Added trigrams
+    min_df: 3  # Reduced from 5
     max_df: 0.8
     stop_words: english
   
-  # Keyword detection
-  use_keyword_features: true
+  # Keyword detection (disabled as features to avoid leakage)
+  # Keywords only used to create labels
+  use_keyword_features: false  # Changed to false
   keyword_categories:
     - violence
     - sexual_content
