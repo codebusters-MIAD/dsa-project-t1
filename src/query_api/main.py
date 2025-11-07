@@ -1,8 +1,3 @@
-"""
-FilmLens Query API - Database Query Service
-FastAPI service for querying movie_triggers table
-"""
-
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -20,10 +15,8 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan events."""
     logger.info("Starting FilmLens Query API...")
     
-    # Create tables if they don't exist
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables verified")
     

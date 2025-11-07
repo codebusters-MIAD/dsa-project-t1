@@ -1,1 +1,1 @@
-"""FilmLens Query API - Database query service."""
+"""Database query service."""

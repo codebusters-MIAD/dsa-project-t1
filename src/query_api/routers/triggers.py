@@ -5,6 +5,7 @@ import math
 from typing import Optional
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from ..database import get_db
 from ..models import MovieTrigger
@@ -63,11 +64,11 @@ async def get_movie_triggers(
         total_pages = math.ceil(total_items / limit) if total_items > 0 else 0
         offset = (page - 1) * limit
         
-        # Get paginated results
-        items = query.order_by(MovieTrigger.id).offset(offset).limit(limit).all()
+        # Get paginated results (order by indexed column for performance)
+        items = query.order_by(MovieTrigger.detected_at).offset(offset).limit(limit).all()
         
         # Convert to response models
-        movie_triggers = [MovieTriggerResponse.from_orm(item) for item in items]
+        movie_triggers = [MovieTriggerResponse.model_validate(item) for item in items]
         
         return PaginatedResponse(
             page=page,
@@ -77,11 +78,11 @@ async def get_movie_triggers(
             items=movie_triggers
         )
         
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Error querying movie triggers: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error querying database: {str(e)}"
+            detail="An internal error occurred while querying the database."
         )
 
 
@@ -110,13 +111,13 @@ async def get_movie_trigger_by_id(
                 detail=f"Movie trigger not found for movie_id: {movie_id}"
             )
         
-        return MovieTriggerResponse.from_orm(trigger)
+        return MovieTriggerResponse.model_validate(trigger)
         
     except HTTPException:
         raise
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Error getting movie trigger {movie_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error querying database: {str(e)}"
+            detail="An internal error occurred while querying the database."
         )

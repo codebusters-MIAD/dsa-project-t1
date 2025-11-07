@@ -1,12 +1,9 @@
-"""Pydantic schemas for API request/response models."""
-
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
 
 
-class MovieTriggerResponse(BaseModel):
-    """Response model for a single movie trigger record."""
+class MovieTriggerResponse(BaseModel):    
     
     model_config = {"protected_namespaces": (), "from_attributes": True}
     
@@ -44,8 +41,7 @@ class MovieTriggerResponse(BaseModel):
     processing_time_ms: Optional[int] = None
 
 
-class PaginatedResponse(BaseModel):
-    """Paginated response wrapper."""
+class PaginatedResponse(BaseModel):    
     
     page: int = Field(..., ge=1, description="Current page number")
     limit: int = Field(..., ge=1, le=100, description="Results per page")

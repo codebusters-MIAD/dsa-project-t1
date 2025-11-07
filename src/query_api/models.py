@@ -1,5 +1,3 @@
-"""SQLAlchemy models for movie_triggers table."""
-
 from sqlalchemy import Column, Integer, String, Boolean, Float, TIMESTAMP, Text
 from sqlalchemy.sql import func
 
