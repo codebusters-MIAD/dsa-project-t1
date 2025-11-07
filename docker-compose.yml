@@ -83,7 +83,7 @@ services:
       - filmlens-network
 
   
-  # API - FastAPI  
+  # API - FastAPI (Prediction Service)
   api:
     build:
       context: .
@@ -115,6 +115,37 @@ services:
       timeout: 10s
       retries: 3
     command: ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  
+  # Query API - FastAPI (Database Query Service)
+  query-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.query-api
+    container_name: filmlens-query-api
+    volumes:
+      - ./src/query_api:/app/src/query_api
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://filmlens_user:${POSTGRES_PASSWORD:-filmlens_dev_2025}@database:5432/${POSTGRES_DB:-filmlens}
+      - PYTHONPATH=/app:/app/src
+      - DEBUG=true
+      - LOG_LEVEL=INFO
+    depends_on:
+      database:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+    networks:
+      - filmlens-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: ["uvicorn", "src.query_api.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
 
 
 # Networks
