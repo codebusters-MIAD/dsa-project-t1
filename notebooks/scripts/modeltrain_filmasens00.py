@@ -78,6 +78,8 @@ df_high_upsampled = resample(df_high, replace=True, n_samples=len(df_major)//2, 
 dataTraining_balanced = pd.concat([df_major, df_med_upsampled, df_high_upsampled])
 dataTraining_balanced = dataTraining_balanced.sample(frac=1, random_state=42).reset_index(drop=True)
 
+dataTraining = dataTraining_balanced
+
 from sklearn.preprocessing import MultiLabelBinarizer
 mlb = MultiLabelBinarizer(classes=["leve", "medio", "alto"])
 Y = mlb.fit_transform(dataTraining['violencia_nivel_list'])
@@ -127,9 +129,46 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, roc_auc_score
 import numpy as np
 
+try:
+    from lightgbm import LGBMClassifier
+except ImportError:
+    LGBMClassifier = None
+
+def get_classifier(classifier_name):
+    classifiers = {
+        'logistic': LogisticRegression(solver='liblinear', max_iter=1000),
+        'randomforest': RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1, class_weight='balanced', max_depth=15),
+        'lightgbm': LGBMClassifier(n_estimators=100, random_state=42, n_jobs=-1, class_weight='balanced', max_depth=6, learning_rate=0.1, verbose=-1) if LGBMClassifier else LogisticRegression(solver='liblinear', max_iter=1000)
+    }
+    return classifiers.get(classifier_name, classifiers['logistic'])
+
+def select_classifier():
+    print("\nPanel de Seleccion de Clasificadores")
+    print("=" * 40)
+    print("1. Logistic Regression")
+    print("2. Random Forest")
+    print("3. LightGBM")
+    print("=" * 40)
+    
+    choice = input("Selecciona el clasificador (1-3): ").strip()
+    
+    if choice == '1':
+        return 'logistic'
+    elif choice == '2':
+        return 'randomforest'
+    elif choice == '3':
+        return 'lightgbm'
+    else:
+        print("Opcion invalida. Usando Logistic Regression por defecto.")
+        return 'logistic'
+
+CLASSIFIER_CHOICE = select_classifier()
+
+print(f"Usando clasificador: {CLASSIFIER_CHOICE}")
+
 X_train, X_test, Y_train, Y_test = train_test_split(X_combined, Y, test_size=0.2, random_state=42)
 
-clf = OneVsRestClassifier(LogisticRegression(solver='liblinear', max_iter=1000))
+clf = OneVsRestClassifier(get_classifier(CLASSIFIER_CHOICE))
 clf.fit(X_train, Y_train)
 
 Y_pred = clf.predict(X_test)
