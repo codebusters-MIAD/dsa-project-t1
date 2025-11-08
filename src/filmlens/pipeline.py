@@ -1,6 +1,6 @@
+"""Pipeline de deteccion de triggers con clasificadores configurables."""
+
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.multioutput import MultiOutputClassifier
 import logging
 
 from filmlens.config import config
@@ -9,52 +9,40 @@ from filmlens.processing import features
 logger = logging.getLogger(__name__)
 
 
-def create_pipeline() -> Pipeline:
+def trigger_detection_pipeline(classifier, config) -> Pipeline:
     """
-    Create sklearn pipeline from config.
+    Crear pipeline de sklearn con clasificador parametrizable.
     
+    Args:
+        classifier: Instancia del clasificador (e.g., MultiOutputClassifier)
+        config: Objeto de configuracion
+        
     Returns:
-        Pipeline ready for training
+        Pipeline listo para entrenamiento
     """
-    logger.info("Creating pipeline from config...")
+    logger.info("Creando pipeline desde config...")
     
     pipeline_steps = []
     
-    # Step 1: Text cleaning
     pipeline_steps.append((
         'text_cleaner',
         features.TextCleaner()
     ))
     
-    # Step 2: Genre encoding
     if config.feature_config.use_genre_features:
         pipeline_steps.append((
             'genre_encoder',
             features.GenreEncoder()
         ))
     
-    # Step 3: Feature combination
     pipeline_steps.append((
         'feature_combiner',
         features.FeatureCombiner()
     ))
     
-    # Step 4: Multi-output classifier
-    rf_cfg = config.model.random_forest
-    base_classifier = RandomForestClassifier(
-        n_estimators=rf_cfg.n_estimators,
-        max_depth=rf_cfg.max_depth,
-        min_samples_split=rf_cfg.min_samples_split,
-        min_samples_leaf=rf_cfg.min_samples_leaf,
-        class_weight=rf_cfg.class_weight,
-        random_state=rf_cfg.random_state,
-        n_jobs=rf_cfg.n_jobs
-    )
-    
-    multi_output_clf = MultiOutputClassifier(base_classifier)
-    pipeline_steps.append(('classifier', multi_output_clf))
+    pipeline_steps.append(('classifier', classifier))
     
     pipeline = Pipeline(pipeline_steps)
     
-    logger.info(f"Pipeline created with {len(pipeline_steps)} steps")
+    logger.info(f"Pipeline creado con {len(pipeline_steps)} pasos")
     return pipeline

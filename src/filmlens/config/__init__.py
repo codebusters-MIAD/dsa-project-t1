@@ -54,21 +54,21 @@ class FeatureConfig(BaseModel):
     use_genre_features: bool
 
 
-class RandomForestConfig(BaseModel):
-    """Random Forest hyperparameters."""
-    n_estimators: int = Field(gt=0)
-    max_depth: int = Field(gt=0)
-    min_samples_split: int = Field(ge=2)
-    min_samples_leaf: int = Field(ge=1)
-    class_weight: str
-    random_state: int
-    n_jobs: int
-
-
 class ModelConfig(BaseModel):
     """Model configuration."""
-    algorithm: str
-    random_forest: RandomForestConfig
+    algorithm: str = Field(
+        default="random_forest",
+        description="Nombre del algoritmo seleccionado"
+    )
+    algorithms: Dict[str, Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Hiperparametros por algoritmo"
+    )
+    
+    def get_algorithm_params(self, algorithm_name: str = None) -> Dict[str, Any]:
+        """Obtener hiperparametros del algoritmo seleccionado."""
+        algo = algorithm_name or self.algorithm
+        return self.algorithms.get(algo, {})
 
 
 class MetricsConfig(BaseModel):
@@ -83,7 +83,7 @@ class Config(BaseModel):
     data_config: DataConfig
     feature_config: FeatureConfig
     model: ModelConfig
-    metrics: MetricsConfig
+    metrics_config: MetricsConfig
 
 
 def find_config_file() -> Path:

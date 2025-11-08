@@ -1,5 +1,6 @@
 from pathlib import Path
 from pydantic_settings import BaseSettings
+import glob
 
 
 class Settings(BaseSettings):
@@ -21,14 +22,26 @@ class Settings(BaseSettings):
     
     @property
     def full_model_path(self) -> Path:
-        # In Docker, model is in /app/src/filmlens/trained_models
-        # Locally, model is in src/filmlens/trained_models
+        """
+        Obtener ruta completa del modelo.
+        Busca el archivo mas reciente con patron _v*.pkl
+        """
         if Path("/app").exists():
-            model_path = Path("/app/src/filmlens/trained_models")
+            model_dir = Path("/app/src/filmlens/trained_models")
         else:
-            model_path = self.project_root / "src/filmlens/trained_models"
+            model_dir = self.project_root / "src/filmlens/trained_models"
         
-        return model_path / self.model_file
+        # Buscar todos los modelos con el patron v{version}_*.pkl
+        pattern = str(model_dir / "multilabel_classifier_v*.pkl")
+        available_models = glob.glob(pattern)
+        
+        if available_models:
+            # Usar el mas reciente por fecha de modificacion
+            model_path = Path(max(available_models, key=lambda p: Path(p).stat().st_mtime))
+            return model_path
+        
+        # Fallback al nombre especificado
+        return model_dir / self.model_file
     
     # CORS
     allowed_origins: list = ["*"]

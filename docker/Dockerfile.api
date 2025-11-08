@@ -25,7 +25,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
     fastapi \
     uvicorn[standard] \
     python-dotenv \
-    joblib
+    joblib \
+    lightgbm
 
 
 # Stage 2: Runtime (imagen final pequeña)
@@ -34,6 +35,11 @@ FROM python:3.11.14-slim-bookworm
 LABEL maintainer="williampinilla@uniandes.edu.co"
 LABEL description="FilmLens Trigger Map - Production API"
 LABEL version="1.0"
+
+# Instalar librerías del sistema necesarias para LightGBM
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copiar dependencias instaladas desde builder
 COPY --from=builder /root/.local /root/.local
