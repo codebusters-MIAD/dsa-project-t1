@@ -10,15 +10,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["Prediction"])
 
 TRIGGER_LABELS = [
-    'has_violence',
-    'has_sexual_content',
-    'has_substance_abuse',
     'has_suicide',
-    'has_child_abuse',
-    'has_discrimination',
+    'has_substance_abuse',
     'has_strong_language',
-    'has_horror',
-    'has_animal_cruelty'
+    'has_sexual_content',
+    'has_violence'
 ]
 
 
@@ -31,7 +27,7 @@ async def predict_triggers(request: PredictionRequest):
         request: Movie information (title, description, genre)
         
     Returns:
-        Multi-label predictions for 9 trigger categories
+        Multi-label predictions for 5 trigger categories
     """
     if not model_manager.is_loaded:
         raise HTTPException(
@@ -49,7 +45,7 @@ async def predict_triggers(request: PredictionRequest):
         # Get predictions
         predictions_array = model_manager.predict(input_data)
         
-        # predictions_array shape: (1, 9) for multi-label
+        # predictions_array shape: (1, 5) for multi-label
         # Each element is binary (0 or 1)
         predictions = []
         

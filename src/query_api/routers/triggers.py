@@ -22,8 +22,10 @@ async def get_movie_triggers(
     limit: int = Query(10, ge=1, le=100, description="Results per page (max 100)"),
     movie_id: Optional[str] = Query(None, description="Filter by movie_id"),
     has_violence: Optional[bool] = Query(None, description="Filter by violence trigger"),
-    has_horror: Optional[bool] = Query(None, description="Filter by horror trigger"),
     has_sexual_content: Optional[bool] = Query(None, description="Filter by sexual content trigger"),
+    has_substance_abuse: Optional[bool] = Query(None, description="Filter by substance abuse trigger"),
+    has_suicide: Optional[bool] = Query(None, description="Filter by suicide trigger"),
+    has_strong_language: Optional[bool] = Query(None, description="Filter by strong language trigger"),
     db: Session = Depends(get_db)
 ):
     """
@@ -34,8 +36,10 @@ async def get_movie_triggers(
     - limit: Results per page (default: 10, max: 100)
     - movie_id: Filter by specific movie ID
     - has_violence: Filter by violence trigger (true/false)
-    - has_horror: Filter by horror trigger (true/false)
     - has_sexual_content: Filter by sexual content trigger (true/false)
+    - has_substance_abuse: Filter by substance abuse trigger (true/false)
+    - has_suicide: Filter by suicide trigger (true/false)
+    - has_strong_language: Filter by strong language trigger (true/false)
     
     Returns:
     - Paginated list of movie trigger records with movie_id as first field
@@ -51,11 +55,17 @@ async def get_movie_triggers(
         if has_violence is not None:
             query = query.filter(MovieTrigger.has_violence == has_violence)
         
-        if has_horror is not None:
-            query = query.filter(MovieTrigger.has_horror == has_horror)
-        
         if has_sexual_content is not None:
             query = query.filter(MovieTrigger.has_sexual_content == has_sexual_content)
+        
+        if has_substance_abuse is not None:
+            query = query.filter(MovieTrigger.has_substance_abuse == has_substance_abuse)
+        
+        if has_suicide is not None:
+            query = query.filter(MovieTrigger.has_suicide == has_suicide)
+        
+        if has_strong_language is not None:
+            query = query.filter(MovieTrigger.has_strong_language == has_strong_language)
         
         # Get total count
         total_items = query.count()

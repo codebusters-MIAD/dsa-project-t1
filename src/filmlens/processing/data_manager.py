@@ -1,5 +1,4 @@
 """Data loading, saving, and pipeline management."""
-
 import pandas as pd
 from pathlib import Path
 import joblib
@@ -71,20 +70,27 @@ def pre_pipeline_preparation(data_frame: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def save_pipeline(pipeline_to_persist: Pipeline) -> None:
+def save_pipeline(pipeline_to_persist: Pipeline, algorithm_name: str = None) -> Path:
     """
-    Save trained pipeline to disk.
+    Guardar pipeline entrenado en disco.
     
     Args:
-        pipeline_to_persist: Trained sklearn pipeline
+        pipeline_to_persist: Pipeline de sklearn entrenado
+        algorithm_name: Nombre del algoritmo (opcional)
+        
+    Returns:
+        Path del archivo guardado
     """
-    save_file_name = f"{config.app_config.pipeline_save_file}{_version}.pkl"
+    algo_name = algorithm_name or config.model.algorithm
+    save_file_name = f"{config.app_config.pipeline_save_file}{_version}_{algo_name}.pkl"
     save_path = TRAINED_MODEL_DIR / save_file_name
     
     TRAINED_MODEL_DIR.mkdir(parents=True, exist_ok=True)
     
     joblib.dump(pipeline_to_persist, save_path)
-    logger.info(f"Pipeline saved to {save_path}")
+    logger.info(f"Pipeline guardado en {save_path}")
+    
+    return save_path
 
 
 def load_pipeline(file_name: str = None) -> Pipeline:

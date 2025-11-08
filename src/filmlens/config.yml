@@ -18,15 +18,11 @@ data_config:
   
   # Multi-label targets
   target_columns:
-    - has_violence
-    - has_sexual_content
-    - has_substance_abuse
     - has_suicide
-    - has_child_abuse
-    - has_discrimination
+    - has_substance_abuse
     - has_strong_language
-    - has_horror
-    - has_animal_cruelty
+    - has_sexual_content
+    - has_violence
 
 feature_config:
   # TF-IDF parameters (increased since we're not using keywords as features)
@@ -39,36 +35,53 @@ feature_config:
   
   # Keyword categories (used only for label creation in train_pipeline.py)
   keyword_categories:
-    - violence
-    - sexual_content
-    - substance_abuse
     - suicide
-    - child_abuse
-    - discrimination
+    - substance_abuse
     - strong_language
-    - horror
-    - animal_cruelty
+    - sexual_content
+    - violence
   
   # Genre encoding
   use_genre_features: true
 
 model:
-  # MultiOutputClassifier with RandomForest
-  algorithm: multi_output_random_forest
+  algorithm: lightgbm
   
-  random_forest:
-    n_estimators: 150
-    max_depth: 25
-    min_samples_split: 5
-    min_samples_leaf: 2
-    class_weight: balanced
-    random_state: 42
-    n_jobs: -1
+  algorithms:
+    random_forest:
+      n_estimators: 150
+      max_depth: 25
+      min_samples_split: 5
+      min_samples_leaf: 2
+      max_features: sqrt
+      class_weight: balanced
+      random_state: 42
+      n_jobs: -1
+      verbose: 0
+    
+    lightgbm:
+      n_estimators: 200
+      learning_rate: 0.05
+      max_depth: -1
+      num_leaves: 31
+      random_state: 42
+      n_jobs: -1
+      verbose: -1
+    
+    logistic_regression:
+      C: 1.0
+      penalty: l2
+      solver: lbfgs
+      max_iter: 1000
+      class_weight: balanced
+      random_state: 42
+      n_jobs: -1
+      verbose: 0
 
-metrics:
-  # Multi-label specific metrics
+metrics_config:
   primary_metric: f1_macro
   additional_metrics:
     - hamming_loss
     - subset_accuracy
     - f1_micro
+    - f1_per_label

@@ -15,26 +15,18 @@ class MovieTriggerResponse(BaseModel):
     detected_at: datetime
     
     # Trigger flags
-    has_violence: bool
-    has_sexual_content: bool
-    has_substance_abuse: bool
     has_suicide: bool
-    has_child_abuse: bool
-    has_discrimination: bool
+    has_substance_abuse: bool
     has_strong_language: bool
-    has_horror: bool
-    has_animal_cruelty: bool
+    has_sexual_content: bool
+    has_violence: bool
     
     # Confidence scores
-    violence_confidence: Optional[float] = None
-    sexual_content_confidence: Optional[float] = None
-    substance_abuse_confidence: Optional[float] = None
     suicide_confidence: Optional[float] = None
-    child_abuse_confidence: Optional[float] = None
-    discrimination_confidence: Optional[float] = None
+    substance_abuse_confidence: Optional[float] = None
     strong_language_confidence: Optional[float] = None
-    horror_confidence: Optional[float] = None
-    animal_cruelty_confidence: Optional[float] = None
+    sexual_content_confidence: Optional[float] = None
+    violence_confidence: Optional[float] = None
     
     # Metadata
     model_version: Optional[str] = None
