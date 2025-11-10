@@ -1,9 +1,13 @@
 import logging
+import time
 import pandas as pd
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import JSONResponse
 
 from ..schemas.predict import PredictionRequest, PredictionResponse, TriggerPrediction
 from ..models import model_manager
+from ..database import db_manager
+from ..config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -18,16 +22,17 @@ TRIGGER_LABELS = [
 ]
 
 
-@router.post("/predict", response_model=PredictionResponse, status_code=status.HTTP_200_OK)
+@router.post("/predict")
 async def predict_triggers(request: PredictionRequest):
     """
-    Predict sensitive content triggers for a movie.
+    Predict sensitive content triggers for a movie and save to database.
     
     Args:
-        request: Movie information (title, description, genre)
+        request: Movie information (movie_id, title, description, genre, verbose)
         
     Returns:
-        Multi-label predictions for 5 trigger categories
+        Multi-label predictions for 5 trigger categories (if verbose=True)
+        or simple {"status": "OK"} (if verbose=False)
     """
     if not model_manager.is_loaded:
         raise HTTPException(
@@ -36,37 +41,36 @@ async def predict_triggers(request: PredictionRequest):
         )
     
     try:
-        # Prepare input data as DataFrame
+        start_time = time.time()
+        
+        # Ensure genre is string type (not object)
         input_data = pd.DataFrame([{
             'description': request.description,
-            'genre': request.genre
+            'genre': str(request.genre)
         }])
         
-        # Get predictions
+        # Ensure correct dtypes
+        input_data['description'] = input_data['description'].astype(str)
+        input_data['genre'] = input_data['genre'].astype(str)
+        
         predictions_array = model_manager.predict(input_data)
         
-        # predictions_array shape: (1, 5) for multi-label
-        # Each element is binary (0 or 1)
         predictions = []
         
-        # Get probabilities for all outputs
-        # predict_proba returns a list of arrays (one per output), not a 2D array
         try:
             proba_list = model_manager.predict_proba(input_data)
         except (AttributeError, ValueError, IndexError) as e:
             logger.warning(f"Could not get probabilities: {e}")
             proba_list = None
         
+        db_predictions = {}
+        
         for i, trigger_label in enumerate(TRIGGER_LABELS):
             detected = bool(predictions_array[0][i])
             
-            # Extract probability for the positive class (index 1)
             if proba_list is not None:
-                # proba_list[i] shape: (n_samples, 2)
-                # [0, 1] gets first sample, positive class probability
                 prob = float(proba_list[i][0, 1])
             else:
-                # Fallback to binary value if proba not available
                 prob = 1.0 if detected else 0.0
             
             predictions.append(
@@ -76,8 +80,31 @@ async def predict_triggers(request: PredictionRequest):
                     detected=detected
                 )
             )
+            
+            db_predictions[trigger_label] = detected
+            db_predictions[f"{trigger_label.replace('has_', '')}_confidence"] = prob
+        
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        
+        # Save to database
+        db_manager.save_prediction(
+            movie_id=request.movie_id,
+            title=request.title,
+            description=request.description,
+            predictions=db_predictions,
+            model_version=settings.model_file,
+            processing_time_ms=processing_time_ms
+        )
+        
+        # Return based on verbose flag
+        if not request.verbose:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={"status": "OK"}
+            )
         
         return PredictionResponse(
+            movie_id=request.movie_id,
             movie_title=request.title,
             predictions=predictions
         )
@@ -87,4 +114,36 @@ async def predict_triggers(request: PredictionRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Prediction failed: {str(e)}"
+        )
+
+
+@router.get("/predict/{movie_id}", status_code=status.HTTP_200_OK)
+async def get_prediction(movie_id: str):
+    """
+    Retrieve saved prediction for a movie from database.
+    
+    Args:
+        movie_id: Unique movie identifier
+        
+    Returns:
+        Saved prediction data if found
+    """
+    try:
+        result = db_manager.get_prediction(movie_id)
+        
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No prediction found for movie_id: {movie_id}"
+            )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving prediction: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve prediction: {str(e)}"
         )

@@ -228,3 +228,6 @@ models/production/*.joblib
 
 # Doc
 docs/
+
+# macOS
+.DS_Store
