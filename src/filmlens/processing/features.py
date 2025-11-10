@@ -146,14 +146,21 @@ class GenreEncoder(BaseEstimator, TransformerMixin):
         if self.genre_column not in X.columns:
             return X
         
-        genre_dummies = pd.get_dummies(X[self.genre_column], prefix='genre')
+        # Asegurar que genre es string
+        X[self.genre_column] = X[self.genre_column].astype(str)
+        
+        # Crear dummies con dtype float64 explícito
+        genre_dummies = pd.get_dummies(X[self.genre_column], prefix='genre', dtype=np.float64)
         
         # Align with training columns
         if self.genre_columns_:
             for col in self.genre_columns_:
                 if col not in genre_dummies.columns:
-                    genre_dummies[col] = 0
+                    genre_dummies[col] = 0.0
             genre_dummies = genre_dummies[self.genre_columns_]
+        
+        # Asegurar que todas las columnas son float64
+        genre_dummies = genre_dummies.astype(np.float64)
         
         X = pd.concat([X, genre_dummies], axis=1)
         return X
@@ -198,7 +205,9 @@ class FeatureCombiner(BaseEstimator, TransformerMixin):
         
         # Add genre features
         if self.genre_columns:
-            X_genre = csr_matrix(X[self.genre_columns].values)
+            # Asegurar que las columnas de género son float64
+            genre_values = X[self.genre_columns].astype(np.float64).values
+            X_genre = csr_matrix(genre_values)
             features_list.append(X_genre)
         
         # Combine all features

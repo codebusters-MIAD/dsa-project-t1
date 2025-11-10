@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     port: int = 8000
     debug: bool = False
     
+    # Database
+    db_host: str = "filmlens-db"
+    db_port: int = 5432
+    db_name: str = "filmlens"
+    db_user: str = "filmlens_user"
+    db_password: str = "filmlens_dev_2025"
+    
     # Model
     model_file: str = "multilabel_classifier_v0.1.0.pkl"
     

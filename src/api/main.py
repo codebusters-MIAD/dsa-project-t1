@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .models import model_manager
+from .database import db_manager
 from .routers import health_router, predict_router
 
 # Configure logging
@@ -25,6 +26,8 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     logger.info("Starting FilmLens API...")
+    
+    # Load ML model
     success = model_manager.load_model()
     
     if success:
@@ -32,10 +35,18 @@ async def lifespan(app: FastAPI):
     else:
         logger.error("Failed to load model")
     
+    # Initialize database connection
+    try:
+        db_manager.initialize()
+        logger.info("Database connection initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+    
     yield
     
     # Shutdown
     logger.info("Shutting down FilmLens API...")
+    db_manager.close()
 
 
 # Create FastAPI app

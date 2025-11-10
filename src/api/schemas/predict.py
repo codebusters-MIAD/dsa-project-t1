@@ -5,16 +5,20 @@ from pydantic import BaseModel, Field
 class PredictionRequest(BaseModel):
     """Request model for movie trigger prediction."""
     
+    movie_id: str = Field(..., min_length=1, max_length=50, description="Unique movie identifier")
     title: str = Field(..., min_length=1, max_length=500, description="Movie title")
     description: str = Field(..., min_length=10, description="Movie plot or description")
     genre: str = Field(..., description="Primary movie genre")
+    verbose: bool = Field(default=True, description="If False, returns only status 200 with 'OK'")
     
     class Config:
         json_schema_extra = {
             "example": {
+                "movie_id": "tt0468569",
                 "title": "The Dark Knight",
                 "description": "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
-                "genre": "Action"
+                "genre": "Action",
+                "verbose": True
             }
         }
 
@@ -39,12 +43,14 @@ class TriggerPrediction(BaseModel):
 class PredictionResponse(BaseModel):
     """Response model for movie trigger prediction."""
     
+    movie_id: str
     movie_title: str
     predictions: List[TriggerPrediction]
     
     class Config:
         json_schema_extra = {
             "example": {
+                "movie_id": "tt0468569",
                 "movie_title": "The Dark Knight",
                 "predictions": [
                     {"trigger": "has_violence", "probability": 0.85, "detected": True},
