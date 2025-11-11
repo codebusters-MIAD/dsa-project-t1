@@ -1,0 +1,40 @@
+# Multi-stage build for FilmLens Dashboard
+FROM python:3.11.14-slim-bookworm as builder
+
+WORKDIR /build
+
+COPY src/dashboard/requirements.txt /tmp/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --user \
+    dash==2.14.2 \
+    dash-bootstrap-components==1.5.0 \
+    plotly==5.18.0 \
+    requests==2.31.0 \
+    gunicorn==21.2.0
+
+FROM python:3.11.14-slim-bookworm
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /root/.local /root/.local
+
+ENV PATH=/root/.local/bin:$PATH
+
+WORKDIR /app
+
+COPY src/dashboard/ /app/
+
+ENV PYTHONUNBUFFERED=1
+ENV API_BASE_URL=http://filmlens-api:8000
+ENV DASHBOARD_PORT=8050
+ENV DASHBOARD_HOST=0.0.0.0
+
+EXPOSE 8050
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8050/ || exit 1
+
+CMD ["python", "app.py"]
