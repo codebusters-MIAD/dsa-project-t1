@@ -3,15 +3,27 @@ version: 2.1
 setup: true
 
 orbs:
-  path-filtering: circleci/path-filtering@1.1.0
+  continuation: circleci/continuation@1.0.0
+
+jobs:
+  check-changes:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Check for dashboard changes
+          command: |
+            if git diff --name-only HEAD~1 | grep -E '^src/dashboard/|^.circleci/pipelines/dashboard.yml'; then
+              echo "export DASHBOARD_CHANGED=true" >> params.txt
+            else
+              echo "export DASHBOARD_CHANGED=false" >> params.txt
+            fi
+      - continuation/continue:
+          configuration_path: .circleci/pipelines/dashboard.yml
+          parameters: params.txt
 
 workflows:
-  setup-workflow:
+  setup:
     jobs:
-      - path-filtering/filter:
-          name: check-updated-files
-          base-revision: first-pipeline-circleci
-          config-path: .circleci/pipelines/dashboard.yml
-          mapping: |
-            src/dashboard/.* run-dashboard-pipeline true
-            .circleci/pipelines/dashboard.yml run-dashboard-pipeline true
+      - check-changes
