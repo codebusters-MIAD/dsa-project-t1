@@ -1,29 +1,87 @@
-version: 2.1
-
-setup: true
+version: '2.1'
 
 orbs:
-  continuation: circleci/continuation@1.0.0
+  node: circleci/node@5.1.0
+
+defaults: &defaults
+  docker:
+    - image: cimg/python:3.11
+  working_directory: ~/project
+
+prepare_venv: &prepare_venv
+  run:
+    name: Create venv
+    command: |
+      python -m venv venv
+      source venv/bin/activate
+      pip install --upgrade pip
 
 jobs:
-  check-changes:
-    docker:
-      - image: cimg/base:stable
+  test_dashboard:
+    <<: *defaults
     steps:
-      - checkout
+      - checkout:
+          path: ~/project/
+      - *prepare_venv
+      - restore_cache:
+          keys:
+            - dashboard-deps-v1-{{ checksum "src/dashboard/requirements.txt" }}
+            - dashboard-deps-v1-
       - run:
-          name: Check for dashboard changes
+          name: Install dependencies
           command: |
-            if git diff --name-only HEAD~1 | grep -E '^src/dashboard/|^.circleci/pipelines/dashboard.yml'; then
-              echo "export DASHBOARD_CHANGED=true" >> params.txt
-            else
-              echo "export DASHBOARD_CHANGED=false" >> params.txt
-            fi
-      - continuation/continue:
-          configuration_path: .circleci/pipelines/dashboard.yml
-          parameters: params.txt
+            source venv/bin/activate
+            cd src/dashboard
+            pip install -r requirements.txt
+            pip install flake8
+      - save_cache:
+          key: dashboard-deps-v1-{{ checksum "src/dashboard/requirements.txt" }}
+          paths:
+            - venv
+      - run:
+          name: Lint dashboard code
+          command: |
+            source venv/bin/activate
+            flake8 src/dashboard/ --max-line-length=120 --exclude=__pycache__,__init__.py
+      - run:
+          name: Validate dashboard structure
+          command: |
+            test -f src/dashboard/app.py || exit 1
+            test -f src/dashboard/config.py || exit 1
+            test -d src/dashboard/components || exit 1
+            test -d src/dashboard/services || exit 1
+            test -d src/dashboard/utils || exit 1
+            echo "Dashboard structure validated"
+
+  deploy_dashboard_to_railway:
+    <<: *defaults
+    steps:
+      - checkout:
+          path: ~/project/
+      - node/install:
+          node-version: '20.9'
+      - run: node --version
+      - run: npm i -g @railway/cli
+      - run:
+          name: Deploy Dashboard to Railway
+          command: |
+            cd src/dashboard
+            RAILWAY_TOKEN=$RAILWAY_TOKEN railway up --service beautiful-generosity --detach
 
 workflows:
-  setup:
+  version: 2
+  dashboard_deploy_pipeline:
     jobs:
-      - check-changes
+      - test_dashboard:
+          filters:
+            branches:
+              only:
+                - main
+                - first-pipeline-circleci
+      - deploy_dashboard_to_railway:
+          requires:
+            - test_dashboard
+          filters:
+            branches:
+              only:
+                - main
