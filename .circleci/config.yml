@@ -85,3 +85,4 @@ workflows:
             branches:
               only:
                 - main
+                - first-pipeline-circleci
