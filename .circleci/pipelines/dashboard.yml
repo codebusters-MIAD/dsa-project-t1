@@ -66,7 +66,7 @@ jobs:
           name: Deploy Dashboard to Railway
           command: |
             cd src/dashboard
-            RAILWAY_TOKEN=$RAILWAY_TOKEN railway up --service filmlens-dashboard --detach
+            RAILWAY_TOKEN=$RAILWAY_TOKEN railway up --service beautiful-generosity --detach
 
 workflows:
   version: 2
