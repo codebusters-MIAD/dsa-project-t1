@@ -5,17 +5,12 @@ setup: true
 orbs:
   path-filtering: circleci/path-filtering@1.1.0
 
-executors:
-  path-filtering-executor:
-    docker:
-      - image: cimg/python:3.11
-
 workflows:
   setup-workflow:
     jobs:
       - path-filtering/filter:
           name: check-updated-files
-          executor: path-filtering-executor
+          base-revision: first-pipeline-circleci
           config-path: .circleci/pipelines/dashboard.yml
           mapping: |
             src/dashboard/.* run-dashboard-pipeline true
