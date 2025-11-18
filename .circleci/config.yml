@@ -1,0 +1,17 @@
+version: 2.1
+
+# Setup workflow con path filtering
+setup: true
+
+orbs:
+  path-filtering: circleci/path-filtering@1.0.0
+
+workflows:
+  setup-workflow:
+    jobs:
+      - path-filtering/filter:
+          name: check-updated-files
+          config-path: .circleci/pipelines/dashboard.yml
+          mapping: |
+            src/dashboard/.* run-dashboard-pipeline true
+            .circleci/pipelines/dashboard.yml run-dashboard-pipeline true
