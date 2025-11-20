@@ -37,6 +37,22 @@ async def predict_sensitivity(request: PredictionRequest):
         processing_time_ms = int((time.time() - start_time) * 1000)
         logger.info(f"Prediccion completada en {processing_time_ms}ms para movie_id={request.movie_id}")
         
+        # Guardar prediccion en DB si esta habilitada
+        if settings.db_enabled:
+            from ..database import db_manager
+            save_success = db_manager.save_prediction(
+                movie_id=request.movie_id,
+                title=request.title,
+                description=request.description,
+                predictions=predictions,
+                model_version=settings.model_version,
+                processing_time_ms=processing_time_ms
+            )
+            if save_success:
+                logger.info(f"Prediccion guardada en DB para movie_id={request.movie_id}")
+            else:
+                logger.warning(f"Fallo al guardar prediccion en DB para movie_id={request.movie_id}")
+        
         # Construir response
         response = PredictionResponse(
             movie_id=request.movie_id,

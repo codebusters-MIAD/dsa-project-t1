@@ -92,7 +92,7 @@ services:
     volumes:
       - ./src:/app/src
       # Mount trained models from local
-      - ./src/filmlens/trained_models:/app/src/filmlens/trained_models
+      - ./models/production/movielens:/app/models/production/movielens
     ports:
       - "8000:8000"
     environment:

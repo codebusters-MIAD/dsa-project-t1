@@ -34,10 +34,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Stage 2: Runtime (imagen final pequeña)
 FROM python:3.11.14-slim-bookworm
 
-LABEL maintainer="williampinilla@uniandes.edu.co"
-LABEL description="MovieLens Sensitivity Classification API"
-LABEL version="1.0.0"
-
 # Instalar librerias del sistema necesarias
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libgomp1 && \

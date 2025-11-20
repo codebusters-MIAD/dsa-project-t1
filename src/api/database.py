@@ -64,13 +64,13 @@ class DatabaseManager:
         processing_time_ms: int
     ) -> bool:
         """
-        Save prediction results to movie_triggers table.
+        Save prediction results to movie_triggers table (multilevel schema V7).
         
         Args:
             movie_id: Unique movie identifier
             title: Movie title
             description: Movie description
-            predictions: Dictionary with trigger predictions and confidences
+            predictions: Dictionary with multilevel predictions per category
             model_version: Model version used for prediction
             processing_time_ms: Processing time in milliseconds
             
@@ -83,14 +83,22 @@ class DatabaseManager:
                     query = """
                         INSERT INTO movie_triggers (
                             movie_id, title, description,
-                            has_violence, has_sexual_content, has_substance_abuse,
-                            has_suicide, has_strong_language,
-                            violence_confidence, sexual_content_confidence,
-                            substance_abuse_confidence, suicide_confidence,
-                            strong_language_confidence,
+                            violencia_nivel, violencia_probabilidad,
+                            violencia_prob_sin_contenido, violencia_prob_moderado, violencia_prob_alto,
+                            sexualidad_nivel, sexualidad_probabilidad,
+                            sexualidad_prob_sin_contenido, sexualidad_prob_moderado, sexualidad_prob_alto,
+                            drogas_nivel, drogas_probabilidad,
+                            drogas_prob_sin_contenido, drogas_prob_moderado, drogas_prob_alto,
+                            lenguaje_fuerte_nivel, lenguaje_fuerte_probabilidad,
+                            lenguaje_fuerte_prob_sin_contenido, lenguaje_fuerte_prob_moderado, lenguaje_fuerte_prob_alto,
+                            suicidio_nivel, suicidio_probabilidad,
+                            suicidio_prob_sin_contenido, suicidio_prob_moderado, suicidio_prob_alto,
                             model_version, processing_time_ms
                         ) VALUES (
                             %s, %s, %s,
+                            %s, %s, %s, %s, %s,
+                            %s, %s, %s, %s, %s,
+                            %s, %s, %s, %s, %s,
                             %s, %s, %s, %s, %s,
                             %s, %s, %s, %s, %s,
                             %s, %s
@@ -100,28 +108,64 @@ class DatabaseManager:
                             title = EXCLUDED.title,
                             description = EXCLUDED.description,
                             detected_at = CURRENT_TIMESTAMP,
-                            has_violence = EXCLUDED.has_violence,
-                            has_sexual_content = EXCLUDED.has_sexual_content,
-                            has_substance_abuse = EXCLUDED.has_substance_abuse,
-                            has_suicide = EXCLUDED.has_suicide,
-                            has_strong_language = EXCLUDED.has_strong_language,
-                            violence_confidence = EXCLUDED.violence_confidence,
-                            sexual_content_confidence = EXCLUDED.sexual_content_confidence,
-                            substance_abuse_confidence = EXCLUDED.substance_abuse_confidence,
-                            suicide_confidence = EXCLUDED.suicide_confidence,
-                            strong_language_confidence = EXCLUDED.strong_language_confidence,
+                            violencia_nivel = EXCLUDED.violencia_nivel,
+                            violencia_probabilidad = EXCLUDED.violencia_probabilidad,
+                            violencia_prob_sin_contenido = EXCLUDED.violencia_prob_sin_contenido,
+                            violencia_prob_moderado = EXCLUDED.violencia_prob_moderado,
+                            violencia_prob_alto = EXCLUDED.violencia_prob_alto,
+                            sexualidad_nivel = EXCLUDED.sexualidad_nivel,
+                            sexualidad_probabilidad = EXCLUDED.sexualidad_probabilidad,
+                            sexualidad_prob_sin_contenido = EXCLUDED.sexualidad_prob_sin_contenido,
+                            sexualidad_prob_moderado = EXCLUDED.sexualidad_prob_moderado,
+                            sexualidad_prob_alto = EXCLUDED.sexualidad_prob_alto,
+                            drogas_nivel = EXCLUDED.drogas_nivel,
+                            drogas_probabilidad = EXCLUDED.drogas_probabilidad,
+                            drogas_prob_sin_contenido = EXCLUDED.drogas_prob_sin_contenido,
+                            drogas_prob_moderado = EXCLUDED.drogas_prob_moderado,
+                            drogas_prob_alto = EXCLUDED.drogas_prob_alto,
+                            lenguaje_fuerte_nivel = EXCLUDED.lenguaje_fuerte_nivel,
+                            lenguaje_fuerte_probabilidad = EXCLUDED.lenguaje_fuerte_probabilidad,
+                            lenguaje_fuerte_prob_sin_contenido = EXCLUDED.lenguaje_fuerte_prob_sin_contenido,
+                            lenguaje_fuerte_prob_moderado = EXCLUDED.lenguaje_fuerte_prob_moderado,
+                            lenguaje_fuerte_prob_alto = EXCLUDED.lenguaje_fuerte_prob_alto,
+                            suicidio_nivel = EXCLUDED.suicidio_nivel,
+                            suicidio_probabilidad = EXCLUDED.suicidio_probabilidad,
+                            suicidio_prob_sin_contenido = EXCLUDED.suicidio_prob_sin_contenido,
+                            suicidio_prob_moderado = EXCLUDED.suicidio_prob_moderado,
+                            suicidio_prob_alto = EXCLUDED.suicidio_prob_alto,
                             model_version = EXCLUDED.model_version,
                             processing_time_ms = EXCLUDED.processing_time_ms
                     """
                     
+                    # Extraer valores del dict de predicciones
+                    violencia = predictions['violencia_nivel']
+                    sexualidad = predictions['sexualidad_nivel']
+                    drogas = predictions['drogas_nivel']
+                    lenguaje = predictions['lenguaje_fuerte_nivel']
+                    suicidio = predictions['suicidio_nivel']
+                    
                     cursor.execute(query, (
                         movie_id, title, description,
-                        predictions['has_violence'], predictions['has_sexual_content'],
-                        predictions['has_substance_abuse'], predictions['has_suicide'],
-                        predictions['has_strong_language'],
-                        predictions['violence_confidence'], predictions['sexual_content_confidence'],
-                        predictions['substance_abuse_confidence'], predictions['suicide_confidence'],
-                        predictions['strong_language_confidence'],
+                        violencia['nivel'], violencia['probabilidad'],
+                        violencia['probabilidades_todas']['sin_contenido'],
+                        violencia['probabilidades_todas']['moderado'],
+                        violencia['probabilidades_todas']['alto'],
+                        sexualidad['nivel'], sexualidad['probabilidad'],
+                        sexualidad['probabilidades_todas']['sin_contenido'],
+                        sexualidad['probabilidades_todas']['moderado'],
+                        sexualidad['probabilidades_todas']['alto'],
+                        drogas['nivel'], drogas['probabilidad'],
+                        drogas['probabilidades_todas']['sin_contenido'],
+                        drogas['probabilidades_todas']['moderado'],
+                        drogas['probabilidades_todas']['alto'],
+                        lenguaje['nivel'], lenguaje['probabilidad'],
+                        lenguaje['probabilidades_todas']['sin_contenido'],
+                        lenguaje['probabilidades_todas']['moderado'],
+                        lenguaje['probabilidades_todas']['alto'],
+                        suicidio['nivel'], suicidio['probabilidad'],
+                        suicidio['probabilidades_todas']['sin_contenido'],
+                        suicidio['probabilidades_todas']['moderado'],
+                        suicidio['probabilidades_todas']['alto'],
                         model_version, processing_time_ms
                     ))
                     

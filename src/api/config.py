@@ -5,7 +5,7 @@ import glob
 
 class Settings(BaseSettings):
     # API metadata
-    app_name: str = "MovieLens Sensitivity Classification API"
+    app_name: str = "FilmLens Sensitivity Classification API"
     version: str = "1.0.0"
     description: str = "Multi-output multiclass API for content sensitivity classification in movies"
     
@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     port: int = 8000
     debug: bool = False
     
-    # Database (deshabilitado por ahora)
-    db_enabled: bool = False
+    # Database
+    db_enabled: bool = True
     db_host: str = "filmlens-db"
     db_port: int = 5432
     db_name: str = "filmlens"
