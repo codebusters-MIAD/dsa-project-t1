@@ -217,10 +217,7 @@ src/filmlens/trained_models/*.joblib
 !src/filmlens/trained_models/.gitkeep
 mlruns/
 mlflow-artifacts/
-models/production/*.pkl
-models/production/*.joblib
-!models/production/.gitkeep
-
+models/production/
 
 # Pycharm
 .idea/

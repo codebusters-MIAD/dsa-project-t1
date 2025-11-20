@@ -1,0 +1,6 @@
+outs:
+- md5: 00b62bebefc269e4604ac5f9a0a38fb7.dir
+  size: 12084164
+  nfiles: 1
+  hash: md5
+  path: consolidated
