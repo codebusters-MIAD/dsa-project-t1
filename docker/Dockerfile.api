@@ -10,7 +10,7 @@ WORKDIR /build
 # Copiar requirements
 COPY requirements/requirements.txt /tmp/requirements.txt
 
-# Instalar dependencias para API (core + FastAPI)
+# Instalar dependencias para API MovieLens
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --user \
     pandas \
@@ -26,17 +26,19 @@ RUN pip install --no-cache-dir --upgrade pip && \
     uvicorn[standard] \
     python-dotenv \
     joblib \
-    lightgbm
+    lightgbm \
+    sentence-transformers \
+    nltk
 
 
 # Stage 2: Runtime (imagen final pequeña)
 FROM python:3.11.14-slim-bookworm
 
 LABEL maintainer="williampinilla@uniandes.edu.co"
-LABEL description="FilmLens Trigger Map - Production API"
-LABEL version="1.0"
+LABEL description="MovieLens Sensitivity Classification API"
+LABEL version="1.0.0"
 
-# Instalar librerías del sistema necesarias para LightGBM
+# Instalar librerias del sistema necesarias
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libgomp1 && \
     rm -rf /var/lib/apt/lists/*
@@ -50,17 +52,20 @@ ENV PATH=/root/.local/bin:$PATH
 # Directorio de trabajo
 WORKDIR /app
 
-# Copiar solo código necesario para API
+# Copiar codigo necesario para API
 COPY src/api/ /app/src/api/
-COPY src/filmlens/ /app/src/filmlens/
+COPY src/movielens/ /app/src/movielens/
 
 # Crear directorio para modelos (se monta como volumen)
-RUN mkdir -p /app/src/filmlens/trained_models
+RUN mkdir -p /app/models/production/movielens
+
+# Descargar recursos NLTK necesarios
+RUN python -c "import nltk; nltk.download('stopwords', download_dir='/root/nltk_data'); nltk.download('wordnet', download_dir='/root/nltk_data'); nltk.download('omw-1.4', download_dir='/root/nltk_data')"
 
 # Variables de entorno
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
-ENV MODEL_PATH=/app/models/production
+ENV NLTK_DATA=/root/nltk_data
 
 # Exponer puerto de API
 EXPOSE 8000
@@ -70,4 +75,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Comando de ejecución con uvicorn
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
