@@ -1,0 +1,77 @@
+package_name: movielens
+
+data_config:
+  dataset_path: data/raw/train/consolidated/dataset_sensibilidad_imdb_final_complete.csv
+  text_column: description
+  test_size: 0.2
+  random_state: 42
+  min_plot_length: 5
+
+target_columns:
+  - violencia_nivel
+  - sexualidad_nivel
+  - drogas_nivel
+  - lenguaje_fuerte_nivel
+  - suicidio_nivel
+
+target_classes:
+  - sin_contenido
+  - moderado
+  - alto
+
+feature_config:
+  tfidf_word:
+    max_features: 50000
+    ngram_range: [1, 3]
+    min_df: 3
+    max_df: 0.9
+    sublinear_tf: true
+  
+  tfidf_char:
+    analyzer: char_wb
+    ngram_range: [3, 5]
+    min_df: 3
+    max_features: 20000
+    sublinear_tf: true
+  
+  sbert:
+    model_name: all-MiniLM-L6-v2
+    use_sbert: true
+
+model_config:
+  algorithm: lightgbm
+  
+  logistic_regression:
+    solver: liblinear
+    max_iter: 1000
+    random_state: 42
+  
+  random_forest:
+    n_estimators: 100
+    max_depth: 15
+    random_state: 42
+    n_jobs: -1
+    class_weight: balanced
+  
+  lightgbm:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    random_state: 42
+    n_jobs: -1
+    class_weight: balanced
+    verbose: -1
+
+balance_config:
+  enable_balancing: true
+  target_column: violencia_nivel
+  balance_ratio: 0.5
+
+pipeline_name: movielens_sensitivity_classifier
+save_pipeline: true
+version: v1.0.0
+
+mlflow_config:
+  tracking_uri: http://localhost:5000
+  experiment_name: movielens-sensitivity
+  registered_model_name: movielens-sensitivity-classifier
