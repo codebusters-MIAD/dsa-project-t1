@@ -25,28 +25,32 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events.
     """
     # Startup
-    logger.info("Starting FilmLens API...")
+    logger.info("Iniciando MovieLens Sensitivity API...")
     
-    # Load ML model
+    # Cargar modelo ML
     success = model_manager.load_model()
     
     if success:
-        logger.info("Model loaded successfully")
+        logger.info("Modelo cargado exitosamente")
     else:
-        logger.error("Failed to load model")
+        logger.error("Fallo al cargar modelo")
     
-    # Initialize database connection
-    try:
-        db_manager.initialize()
-        logger.info("Database connection initialized")
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
+    # Base de datos deshabilitada por configuracion
+    if settings.db_enabled:
+        try:
+            db_manager.initialize()
+            logger.info("Conexion a base de datos inicializada")
+        except Exception as e:
+            logger.error(f"Fallo al inicializar base de datos: {e}")
+    else:
+        logger.info("Base de datos deshabilitada")
     
     yield
     
     # Shutdown
-    logger.info("Shutting down FilmLens API...")
-    db_manager.close()
+    logger.info("Cerrando MovieLens Sensitivity API...")
+    if settings.db_enabled:
+        db_manager.close()
 
 
 # Create FastAPI app

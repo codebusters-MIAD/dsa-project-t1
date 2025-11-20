@@ -1,61 +1,85 @@
-from typing import List
+from typing import List, Dict
 from pydantic import BaseModel, Field
 
 
 class PredictionRequest(BaseModel):
-    """Request model for movie trigger prediction."""
+    """Request model para clasificacion de sensibilidad"""
     
-    movie_id: str = Field(..., min_length=1, max_length=50, description="Unique movie identifier")
-    title: str = Field(..., min_length=1, max_length=500, description="Movie title")
-    description: str = Field(..., min_length=10, description="Movie plot or description")
-    genre: str = Field(..., description="Primary movie genre")
-    verbose: bool = Field(default=True, description="If False, returns only status 200 with 'OK'")
+    movie_id: str = Field(..., min_length=1, max_length=50, description="Identificador unico de pelicula")
+    title: str = Field(..., min_length=1, max_length=500, description="Titulo de la pelicula")
+    description: str = Field(..., min_length=10, description="Sinopsis o descripcion de la pelicula")
     
     class Config:
         json_schema_extra = {
             "example": {
                 "movie_id": "tt0468569",
                 "title": "The Dark Knight",
-                "description": "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
-                "genre": "Action",
-                "verbose": True
+                "description": "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice."
             }
         }
 
 
-class TriggerPrediction(BaseModel):
-    """Individual trigger prediction result."""
+class CategoryPrediction(BaseModel):
+    """Prediccion de nivel de sensibilidad para una categoria"""
     
-    trigger: str = Field(..., description="Trigger category name")
-    probability: float = Field(..., ge=0.0, le=1.0, description="Prediction probability (0-1)")
-    detected: bool = Field(..., description="Whether trigger is detected (threshold > 0.5)")
+    nivel: str = Field(..., description="Nivel predicho: sin_contenido, moderado, alto")
+    probabilidad: float = Field(..., ge=0.0, le=1.0, description="Probabilidad del nivel predicho")
+    probabilidades_todas: Dict[str, float] = Field(..., description="Probabilidades de todos los niveles")
     
     class Config:
         json_schema_extra = {
             "example": {
-                "trigger": "has_violence",
-                "probability": 0.85,
-                "detected": True
+                "nivel": "alto",
+                "probabilidad": 0.85,
+                "probabilidades_todas": {
+                    "sin_contenido": 0.05,
+                    "moderado": 0.10,
+                    "alto": 0.85
+                }
             }
         }
 
 
 class PredictionResponse(BaseModel):
-    """Response model for movie trigger prediction."""
+    """Response model para clasificacion de sensibilidad"""
     
     movie_id: str
     movie_title: str
-    predictions: List[TriggerPrediction]
+    violencia_nivel: CategoryPrediction
+    sexualidad_nivel: CategoryPrediction
+    drogas_nivel: CategoryPrediction
+    lenguaje_fuerte_nivel: CategoryPrediction
+    suicidio_nivel: CategoryPrediction
     
     class Config:
         json_schema_extra = {
             "example": {
                 "movie_id": "tt0468569",
                 "movie_title": "The Dark Knight",
-                "predictions": [
-                    {"trigger": "has_violence", "probability": 0.85, "detected": True},
-                    {"trigger": "has_sexual_content", "probability": 0.12, "detected": False},
-                    {"trigger": "has_substance_abuse", "probability": 0.23, "detected": False}
-                ]
+                "violencia_nivel": {
+                    "nivel": "alto",
+                    "probabilidad": 0.85,
+                    "probabilidades_todas": {"sin_contenido": 0.05, "moderado": 0.10, "alto": 0.85}
+                },
+                "sexualidad_nivel": {
+                    "nivel": "sin_contenido",
+                    "probabilidad": 0.90,
+                    "probabilidades_todas": {"sin_contenido": 0.90, "moderado": 0.08, "alto": 0.02}
+                },
+                "drogas_nivel": {
+                    "nivel": "moderado",
+                    "probabilidad": 0.55,
+                    "probabilidades_todas": {"sin_contenido": 0.30, "moderado": 0.55, "alto": 0.15}
+                },
+                "lenguaje_fuerte_nivel": {
+                    "nivel": "moderado",
+                    "probabilidad": 0.65,
+                    "probabilidades_todas": {"sin_contenido": 0.20, "moderado": 0.65, "alto": 0.15}
+                },
+                "suicidio_nivel": {
+                    "nivel": "sin_contenido",
+                    "probabilidad": 0.95,
+                    "probabilidades_todas": {"sin_contenido": 0.95, "moderado": 0.03, "alto": 0.02}
+                }
             }
         }
