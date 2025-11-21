@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import triggers
+from .routers import triggers, movies
 from .database import engine, Base
 
 logging.basicConfig(
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="FilmLens Query API",
-    description="API for querying movie triggers and predictions",
+    description="API for querying movie triggers and predictions from FilmLens database",
     version="0.1.0",
     lifespan=lifespan
 )
@@ -42,6 +42,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(movies.router)
 app.include_router(triggers.router)
 
 

@@ -9,14 +9,14 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from ..database import get_db
 from ..models import MovieTrigger
-from ..schemas import PaginatedResponse, MovieTriggerResponse
+from ..schemas import PaginatedTriggersResponse, MovieTriggerResponse
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/triggers", tags=["Movie Triggers"])
 
 
-@router.get("", response_model=PaginatedResponse)
+@router.get("", response_model=PaginatedTriggersResponse)
 async def get_movie_triggers(
     page: int = Query(1, ge=1, description="Page number (starts at 1)"),
     limit: int = Query(10, ge=1, le=100, description="Results per page (max 100)"),
@@ -80,7 +80,7 @@ async def get_movie_triggers(
         # Convert to response models
         movie_triggers = [MovieTriggerResponse.model_validate(item) for item in items]
         
-        return PaginatedResponse(
+        return PaginatedTriggersResponse(
             page=page,
             limit=limit,
             total_items=total_items,
