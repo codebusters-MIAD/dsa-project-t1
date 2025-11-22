@@ -158,11 +158,13 @@ services:
       - "8050:8050"
     environment:
       - API_BASE_URL=http://api:8000
+      - QUERY_API_BASE_URL=http://query-api:8001
       - DASHBOARD_PORT=8050
       - DASHBOARD_HOST=0.0.0.0
       - DEBUG_MODE=false
     depends_on:
       - api
+      - query-api
     networks:
       - filmlens-network
     restart: unless-stopped
