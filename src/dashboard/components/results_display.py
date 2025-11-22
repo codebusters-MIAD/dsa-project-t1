@@ -2,8 +2,6 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 
-from config import TRIGGER_LABELS, TRIGGER_COLORS
-
 
 def create_sensitivity_gauge(score: float, color: str):
     """Create a gauge chart for family suitability score."""
@@ -41,48 +39,79 @@ def create_sensitivity_gauge(score: float, color: str):
     return fig
 
 
-def create_trigger_card(trigger_name: str, spanish_name: str, detected: bool, probability: float, color: str):
-    """Create a card for individual trigger display."""
-
-    status_text = "Tiene" if detected else "No tiene"
-    status_color = "danger" if detected else "success"
-
-    percentage = f"{probability * 100:.1f}%"
-
-    return dbc.Card(
+def create_trigger_card_multilevel(trigger_name: str, spanish_name: str, icon: str, nivel: str, probability: float, probabilities_all: dict, description: str):
+    """Create a card for individual trigger display with multilevel support."""
+    
+    # Map level to badge text and Bootstrap color
+    level_config = {
+        "sin_contenido": {
+            "text": "Sin Contenido",
+            "color": "success"  # Verde
+        },
+        "moderado": {
+            "text": "Moderado",
+            "color": "warning"  # Naranja
+        },
+        "alto": {
+            "text": "Alto",
+            "color": "danger"  # Rojo
+        },
+    }
+    
+    badge_text = level_config[nivel]["text"]
+    badge_color = level_config[nivel]["color"]
+    
+    return html.Div(
         [
-            dbc.CardBody(
+            # Header with icon
+            html.Div(
                 [
-                    html.Div(
-                        [
-                            html.H5(spanish_name, className="card-title mb-2"),
-                            html.Div(
-                                [
-                                    dbc.Badge(
-                                        status_text,
-                                        color=status_color,
-                                        className="me-2",
-                                        style={"fontSize": "14px", "padding": "8px 12px"},
-                                    ),
-                                    html.Span(
-                                        percentage, style={"fontSize": "18px", "fontWeight": "bold", "color": color}
-                                    ),
-                                ],
-                                className="d-flex align-items-center justify-content-between",
-                            ),
-                            dbc.Progress(
-                                value=probability * 100,
-                                color="danger" if detected else "success",
-                                className="mt-3",
-                                style={"height": "8px"},
-                            ),
-                        ]
+                    html.Span(icon, style={"fontSize": "40px"}),
+                ],
+                className="text-center mb-2",
+            ),
+            # Title
+            html.H6(
+                spanish_name,
+                className="text-center mb-3",
+                style={"fontWeight": "600", "fontSize": "16px"}
+            ),
+            # Description
+            html.P(
+                description,
+                className="text-center mb-3",
+                style={
+                    "fontSize": "12px",
+                    "lineHeight": "1.4",
+                    "color": "#666",
+                    "minHeight": "55px"
+                },
+            ),
+            # Badge usando color de Bootstrap
+            html.Div(
+                [
+                    dbc.Badge(
+                        badge_text,
+                        color=badge_color,
+                        className="px-3 py-2",
+                        style={
+                            "fontSize": "14px",
+                            "fontWeight": "600",
+                            "borderRadius": "20px",
+                        },
                     )
-                ]
-            )
+                ],
+                className="text-center",
+            ),
         ],
-        className="mb-3",
-        style={"borderLeft": f"4px solid {color}"},
+        style={
+            "padding": "20px 15px",
+            "borderRadius": "8px",
+            "border": "1px solid #e0e0e0",
+            "backgroundColor": "white",
+            "height": "100%",
+            "boxShadow": "0 1px 3px rgba(0,0,0,0.05)",
+        },
     )
 
 

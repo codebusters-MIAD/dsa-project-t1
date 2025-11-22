@@ -1,73 +1,63 @@
 from typing import List, Dict
 
 
-def calculate_family_suitability_score(predictions: List[Dict]) -> float:
+def calculate_family_suitability_score_multilevel(predictions: Dict) -> float:
     """
-    Calcula el indice de aptitud familiar a partir de las probabilidades de cada trigger.
-    Usa un promedio ponderado basado en la severidad de cada trigger, luego invierte el resultado.
-
-    Score alto (70-100) = Mas apto para ver en familia (VERDE)
-    Score bajo (0-40) = Menos apto para ver en familia (ROJO)
-
-    Ranking de severidad (de mas a menos severo):
-    1. Violencia (1.0): Daño fisico directo, mas impactante visualmente
-    2. Suicidio (0.95): Extremadamente sensible, pero menos frecuente que violencia
-    3. Contenido sexual (0.85): Inapropiado para menores, restringido por edad
-    4. Abuso de sustancias (0.70): Normalizacion de comportamientos riesgosos
-    5. Lenguaje fuerte (0.55): Menos severo, mas aceptado socialmente
-
+    Calcula el índice de aptitud familiar basado en predicciones multinivel.
+    
+    Para cada categoría, consideramos:
+    - sin_contenido: 0 puntos (no penaliza)
+    - moderado: penaliza según probabilidad y peso de la categoría
+    - alto: penaliza el doble que moderado
+    
+    Score alto (70-100) = Más apto para ver en familia
+    Score bajo (0-40) = Menos apto para ver en familia
+    
     Args:
-        predictions: Lista de predicciones de triggers con probabilidades
-
+        predictions: Dict con las predicciones de cada categoría (violencia_nivel, etc.)
+        
     Returns:
         Score de aptitud familiar (0-100), donde mayor es mejor
     """
+    # Pesos por categoría (importancia relativa)
     weights = {
-        "has_violence": 1.0,
-        "has_suicide": 0.95,
-        "has_sexual_content": 0.85,
-        "has_substance_abuse": 0.70,
-        "has_strong_language": 0.55,
+        "violencia_nivel": 1.0,
+        "suicidio_nivel": 0.95,
+        "sexualidad_nivel": 0.85,
+        "drogas_nivel": 0.70,
+        "lenguaje_fuerte_nivel": 0.55,
     }
-
-    total_weight = 0
-    weighted_sum = 0
-
-    for pred in predictions:
-        trigger = pred["trigger"]
-        probability = pred["probability"]
-        weight = weights.get(trigger, 0.5)
-
-        weighted_sum += probability * weight
-        total_weight += weight
-
+    
+    # Penalización por nivel
+    level_penalties = {
+        "sin_contenido": 0.0,
+        "moderado": 0.5,
+        "alto": 1.0,
+    }
+    
+    total_penalty = 0
+    total_weight = sum(weights.values())
+    
+    for category, weight in weights.items():
+        if category in predictions:
+            pred = predictions[category]
+            nivel = pred.get("nivel", "sin_contenido")
+            probability = pred.get("probabilidad", 0.0)
+            
+            # Calcular penalización: peso_categoría × penalización_nivel × probabilidad
+            penalty = weight * level_penalties.get(nivel, 0) * probability
+            total_penalty += penalty
+    
+    # Normalizar a 0-100 (total_penalty máximo sería total_weight si todo fuera alto con prob=1)
     if total_weight == 0:
         return 100.0
-
-    sensitivity_score = (weighted_sum / total_weight) * 100
-
+    
+    sensitivity_score = (total_penalty / total_weight) * 100
+    
     # Invertir: alta sensibilidad = baja aptitud
     suitability_score = 100 - sensitivity_score
-
+    
     return round(suitability_score, 1)
-
-
-def get_suitability_level(score: float) -> str:
-    """
-    Obtiene la etiqueta del nivel de aptitud segun el score.
-
-    Args:
-        score: Score de aptitud (0-100), mayor es mejor
-
-    Returns:
-        Etiqueta del nivel: 'alto', 'medio', o 'bajo'
-    """
-    if score >= 70:
-        return "alto"
-    elif score >= 40:
-        return "medio"
-    else:
-        return "bajo"
 
 
 def get_suitability_color(score: float) -> str:
