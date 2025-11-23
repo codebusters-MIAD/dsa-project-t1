@@ -1,22 +1,18 @@
-from pathlib import Path
-from pydantic_settings import BaseSettings
 import logging
-import glob
-
-from .database_config import DatabaseConfigParser
+from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
     # API metadata
-    app_name: str = "FilmLens Sensitivity Classification API"
-    version: str = "1.0.0"
-    description: str = "Multi-output multiclass API for content sensitivity classification in movies"
+    app_name: str = "FilmLens Query API"
+    version: str = "0.1.0"
+    description: str = "Query service for movie triggers database"
     
     # Server
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8001
     debug: bool = False
     
     # Environment
@@ -30,42 +26,12 @@ class Settings(BaseSettings):
     aws_use_iam_role: bool = True
     
     # Database
-    db_enabled: bool = True
     database_url: str = ""
-    db_host: str = "filmlens-db"
+    db_host: str = "database"
     db_port: int = 5432
     db_name: str = "filmlens"
     db_user: str = "filmlens_user"
     db_password: str = "filmlens_dev_2025"
-    
-    # Model version
-    model_version: str = "v1.0.0"
-    
-    # Paths
-    project_root: Path = Path(__file__).parent.parent.parent
-    
-    @property
-    def models_dir(self) -> Path:
-        """Directorio base de modelos"""
-        if Path("/app").exists():
-            return Path("/app/models/production/movielens")
-        return self.project_root / "models" / "production" / "movielens"
-    
-    @property
-    def model_path(self) -> Path:
-        return self.models_dir / f"movielens_sensitivity_classifier_{self.model_version}.pkl"
-    
-    @property
-    def tfidf_word_path(self) -> Path:
-        return self.models_dir / f"tfidf_word_{self.model_version}.pkl"
-    
-    @property
-    def tfidf_char_path(self) -> Path:
-        return self.models_dir / f"tfidf_char_{self.model_version}.pkl"
-    
-    @property
-    def sbert_path(self) -> Path:
-        return self.models_dir / f"sbert_model_{self.model_version}"
     
     # CORS
     allowed_origins: list = ["*"]
@@ -77,6 +43,8 @@ class Settings(BaseSettings):
         """
         Get database configuration with priority: RDS_SECRET_MANAGER_ARN > DATABASE_URL > defaults.
         """
+        from .database_config import DatabaseConfigParser
+        
         fallback = {
             'host': self.db_host,
             'port': self.db_port,

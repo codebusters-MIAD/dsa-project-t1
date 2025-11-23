@@ -8,7 +8,6 @@ from components import (
     create_search_interface,
     create_autocomplete_item,
     create_results_display,
-    create_trigger_card_multilevel,
     create_sensitivity_gauge,
 )
 from services import APIClient

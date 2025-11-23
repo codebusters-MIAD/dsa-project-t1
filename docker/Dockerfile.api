@@ -28,7 +28,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
     joblib \
     lightgbm \
     sentence-transformers \
-    nltk
+    nltk \
+    boto3
 
 
 # Stage 2: Runtime (imagen final pequeña)

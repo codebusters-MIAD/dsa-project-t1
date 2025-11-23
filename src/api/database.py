@@ -16,18 +16,20 @@ class DatabaseManager:
         self._pool: Optional[SimpleConnectionPool] = None
     
     def initialize(self):
-        """Initialize database connection pool."""
+        """Initialize database connection pool using configuration."""
         try:
+            db_config = settings.get_database_config()
+            
             self._pool = SimpleConnectionPool(
                 minconn=1,
                 maxconn=10,
-                host=settings.db_host,
-                port=settings.db_port,
-                database=settings.db_name,
-                user=settings.db_user,
-                password=settings.db_password
+                host=db_config['host'],
+                port=db_config['port'],
+                database=db_config['database'],
+                user=db_config['user'],
+                password=db_config['password']
             )
-            logger.info("Database connection pool initialized")
+            logger.info(f"Database connection pool initialized for {db_config['host']}:{db_config['port']}/{db_config['database']}")
         except Exception as e:
             logger.error(f"Failed to initialize database pool: {e}")
             raise
@@ -65,17 +67,6 @@ class DatabaseManager:
     ) -> bool:
         """
         Save prediction results to movie_triggers table (multilevel schema V7).
-        
-        Args:
-            movie_id: Unique movie identifier
-            title: Movie title
-            description: Movie description
-            predictions: Dictionary with multilevel predictions per category
-            model_version: Model version used for prediction
-            processing_time_ms: Processing time in milliseconds
-            
-        Returns:
-            True if successful, False otherwise
         """
         try:
             with self.get_connection() as conn:
@@ -180,12 +171,6 @@ class DatabaseManager:
     def get_prediction(self, movie_id: str) -> Optional[dict]:
         """
         Retrieve prediction for a movie from database.
-        
-        Args:
-            movie_id: Unique movie identifier
-            
-        Returns:
-            Dictionary with prediction data or None if not found
         """
         try:
             with self.get_connection() as conn:
