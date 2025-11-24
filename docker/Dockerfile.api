@@ -10,25 +10,9 @@ WORKDIR /build
 # Copiar requirements
 COPY requirements/requirements.txt /tmp/requirements.txt
 
-# Instalar dependencias para API MovieLens
+# Instalar dependencias desde requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --user \
-    pandas \
-    numpy \
-    scikit-learn \
-    scipy \
-    pydantic \
-    pydantic-settings \
-    pyyaml \
-    mlflow \
-    psycopg2-binary \
-    fastapi \
-    uvicorn[standard] \
-    python-dotenv \
-    joblib \
-    lightgbm \
-    sentence-transformers \
-    nltk
+    pip install --no-cache-dir --user -r /tmp/requirements.txt
 
 
 # Stage 2: Runtime (imagen final pequeña)
@@ -36,7 +20,7 @@ FROM python:3.11.14-slim-bookworm
 
 # Instalar librerias del sistema necesarias
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libgomp1 && \
+    apt-get install -y --no-install-recommends libgomp1 curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Copiar dependencias instaladas desde builder
@@ -52,8 +36,8 @@ WORKDIR /app
 COPY src/api/ /app/src/api/
 COPY src/movielens/ /app/src/movielens/
 
-# Crear directorio para modelos (se monta como volumen)
-RUN mkdir -p /app/models/production/movielens
+# Copiar modelo ML entrenado
+COPY models/production/movielens/ /app/models/production/movielens/
 
 # Descargar recursos NLTK necesarios
 RUN python -c "import nltk; nltk.download('stopwords', download_dir='/root/nltk_data'); nltk.download('wordnet', download_dir='/root/nltk_data'); nltk.download('omw-1.4', download_dir='/root/nltk_data')"
@@ -68,7 +52,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Comando de ejecución con uvicorn
 CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
