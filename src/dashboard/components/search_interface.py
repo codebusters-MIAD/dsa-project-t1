@@ -52,14 +52,24 @@ def create_search_interface():
                                     ": una puntuación inteligente que te dice qué tan adecuada es cada película para niños entre 7 y 12 años.",
                                 ],
                                 className="text-center",
-                                style={"color": "#555", "fontSize": "16px", "lineHeight": "1.6", "marginBottom": "10px"},
+                                style={
+                                    "color": "#555",
+                                    "fontSize": "16px",
+                                    "lineHeight": "1.6",
+                                    "marginBottom": "10px",
+                                },
                             ),
                             html.P(
                                 [
                                     html.Strong("Sin spoilers. Sin complicaciones. Solo claridad."),
                                 ],
                                 className="text-center",
-                                style={"color": "#333", "fontSize": "17px", "fontWeight": "600", "marginBottom": "20px"},
+                                style={
+                                    "color": "#333",
+                                    "fontSize": "17px",
+                                    "fontWeight": "600",
+                                    "marginBottom": "20px",
+                                },
                             ),
                         ],
                         className="mb-4",

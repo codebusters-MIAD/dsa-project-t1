@@ -82,7 +82,6 @@ UI_CONSTANTS = {
     "AUTOCOMPLETE_MAX_HEIGHT": "300px",
     "AUTOCOMPLETE_DROPDOWN_OFFSET": "5px",
     "AUTOCOMPLETE_SHADOW": "0 4px 12px rgba(0,0,0,0.15)",
-    
     # Font sizes
     "FONT_SIZE_ICON_LARGE": "48px",
     "FONT_SIZE_ICON_MEDIUM": "32px",
@@ -91,18 +90,15 @@ UI_CONSTANTS = {
     "FONT_SIZE_TEXT_NORMAL": "14px",
     "FONT_SIZE_TEXT_MEDIUM": "16px",
     "FONT_SIZE_TEXT_LARGE": "18px",
-    
     # Spacing
     "PADDING_SMALL": "8px 12px",
     "PADDING_MEDIUM": "12px",
     "PADDING_LARGE": "20px 15px",
     "MARGIN_SMALL": "5px",
     "MARGIN_MEDIUM": "15px",
-    
     # Component heights
     "TRIGGER_CARD_DESCRIPTION_MIN_HEIGHT": "55px",
     "INPUT_PADDING_LEFT": "45px",
-    
     # Colors
     "COLOR_TEXT_MUTED": "#999",
     "COLOR_TEXT_GRAY": "#666",
@@ -111,9 +107,7 @@ UI_CONSTANTS = {
     "COLOR_BORDER": "#ddd",
     "COLOR_WHITE": "white",
     "COLOR_BACKGROUND_LIGHT": "#f0f0f0",
-    
     # Border radius
     "BORDER_RADIUS_SMALL": "8px",
     "BORDER_RADIUS_MEDIUM": "20px",
 }
-

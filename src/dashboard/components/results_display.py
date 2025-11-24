@@ -39,28 +39,27 @@ def create_sensitivity_gauge(score: float, color: str):
     return fig
 
 
-def create_trigger_card_multilevel(trigger_name: str, spanish_name: str, icon: str, nivel: str, probability: float, probabilities_all: dict, description: str):
+def create_trigger_card_multilevel(
+    trigger_name: str,
+    spanish_name: str,
+    icon: str,
+    nivel: str,
+    probability: float,
+    probabilities_all: dict,
+    description: str,
+):
     """Create a card for individual trigger display with multilevel support."""
-    
+
     # Map level to badge text and Bootstrap color
     level_config = {
-        "sin_contenido": {
-            "text": "Sin Contenido",
-            "color": "success"  # Verde
-        },
-        "moderado": {
-            "text": "Moderado",
-            "color": "warning"  # Naranja
-        },
-        "alto": {
-            "text": "Alto",
-            "color": "danger"  # Rojo
-        },
+        "sin_contenido": {"text": "Sin Contenido", "color": "success"},  # Verde
+        "moderado": {"text": "Moderado", "color": "warning"},  # Naranja
+        "alto": {"text": "Alto", "color": "danger"},  # Rojo
     }
-    
+
     badge_text = level_config[nivel]["text"]
     badge_color = level_config[nivel]["color"]
-    
+
     return html.Div(
         [
             # Header with icon
@@ -71,21 +70,12 @@ def create_trigger_card_multilevel(trigger_name: str, spanish_name: str, icon: s
                 className="text-center mb-2",
             ),
             # Title
-            html.H6(
-                spanish_name,
-                className="text-center mb-3",
-                style={"fontWeight": "600", "fontSize": "16px"}
-            ),
+            html.H6(spanish_name, className="text-center mb-3", style={"fontWeight": "600", "fontSize": "16px"}),
             # Description
             html.P(
                 description,
                 className="text-center mb-3",
-                style={
-                    "fontSize": "12px",
-                    "lineHeight": "1.4",
-                    "color": "#666",
-                    "minHeight": "55px"
-                },
+                style={"fontSize": "12px", "lineHeight": "1.4", "color": "#666", "minHeight": "55px"},
             ),
             # Badge usando color de Bootstrap
             html.Div(

@@ -82,6 +82,15 @@ test-coverage: ## Tests con coverage
 	pytest tests/ -v --cov=src/filmlens --cov-report=html --cov-report=term
 	@echo "Coverage report: htmlcov/index.html"
 
+# Dashboard commands
+.PHONY: dashboard-format
+dashboard-format: ## Formatear código del dashboard con Black
+	black --line-length=120 src/dashboard/
+
+.PHONY: dashboard-format-check
+dashboard-format-check: ## Verificar formato del dashboard (sin cambios)
+	black --check --line-length=120 src/dashboard/
+
 # Database migrations
 .PHONY: db-migrate
 db-migrate: ## Aplicar migraciones Flyway
