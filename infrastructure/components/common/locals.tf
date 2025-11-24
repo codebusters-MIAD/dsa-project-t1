@@ -4,5 +4,6 @@ locals {
     Environment = var.environment
     ManagedBy   = "Terraform"
     Repository  = "dsa-project-t1"
+    BudgetId    = "filmlens-${var.environment}"
   }
 }
