@@ -48,3 +48,20 @@ module "ecr_query_api" {
 
   tags = local.common_tags
 }
+
+# ECR Repository for MLflow Service
+module "ecr_mlflow" {
+  source = "../../shared/ecr"
+
+  environment       = var.environment
+  aws_region        = var.aws_region
+  repository_name   = "${lower(var.project_name)}-mlflow"
+  force_delete      = var.environment != "prod"
+  
+  dockerfile_path   = "docker"
+  dockerfile_name   = "Dockerfile.mlflow"
+  version_file_path = null  # MLflow uses base image version
+  build_context     = "."
+
+  tags = local.common_tags
+}
