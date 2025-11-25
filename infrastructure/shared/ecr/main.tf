@@ -1,6 +1,6 @@
 locals {
   repository_name = var.repository_name
-  version         = trimspace(file("${path.module}/../../../${var.version_file_path}"))
+  version         = var.version_file_path != null ? trimspace(file("${path.module}/../../../${var.version_file_path}")) : "latest"
   image_tag       = "${aws_ecr_repository.this.repository_url}:${local.version}"
   latest_tag      = "${aws_ecr_repository.this.repository_url}:latest"
 }

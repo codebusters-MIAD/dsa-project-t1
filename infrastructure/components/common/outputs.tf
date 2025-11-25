@@ -62,3 +62,19 @@ output "ecr_query_api_version" {
   description = "Current Query API version"
   value       = module.ecr_query_api.version
 }
+
+# ECR MLflow Outputs
+output "ecr_mlflow_repository_url" {
+  description = "URL of the MLflow ECR repository"
+  value       = module.ecr_mlflow.repository_url
+}
+
+output "ecr_mlflow_repository_name" {
+  description = "Name of the MLflow ECR repository"
+  value       = module.ecr_mlflow.repository_name
+}
+
+output "ecr_mlflow_image_tag" {
+  description = "Full image tag for MLflow"
+  value       = module.ecr_mlflow.image_tag
+}
